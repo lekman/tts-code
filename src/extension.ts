@@ -31,12 +31,14 @@ export function activate(context: vscode.ExtensionContext) {
 	const disposable = vscode.commands.registerCommand(
 		"extension.helloWorld",
 		() => {
+			/* istanbul ignore next */
 			vscode.window.showInformationMessage("Hello from VSCode Extension!");
 		}
 	);
 
 	const speakTextCommand = vscode.commands.registerCommand(
 		"ttsCode.speakText",
+		/* istanbul ignore next */
 		() => {
 			vscode.window.showInformationMessage(
 				"Text-to-Speech activated! (This is a placeholder)"

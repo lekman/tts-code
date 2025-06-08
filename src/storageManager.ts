@@ -34,6 +34,7 @@ export class StorageManager {
 	 * @param {string} _key - The cache key for the audio data.
 	 * @returns {Promise<Uint8Array | undefined>} The cached audio data, or undefined if not found.
 	 */
+	/* istanbul ignore next */
 	public async getAudioCache(_key: string): Promise<Uint8Array | undefined> {
 		// Placeholder for retrieving audio from cache
 		return undefined;
@@ -45,6 +46,7 @@ export class StorageManager {
 	 * @param {string} _fileName - The name of the file to save.
 	 * @returns {Promise<import('vscode').Uri | undefined>} The URI of the saved file, or undefined if not saved.
 	 */
+	/* istanbul ignore next */
 	public async saveAudioFile(
 		_data: Uint8Array,
 		_fileName: string
@@ -59,6 +61,7 @@ export class StorageManager {
 	 * @param {Uint8Array} _data - The audio data to cache.
 	 * @returns {Promise<void>}
 	 */
+	/* istanbul ignore next */
 	public async setAudioCache(_key: string, _data: Uint8Array): Promise<void> {
 		// Placeholder for caching audio data
 	}

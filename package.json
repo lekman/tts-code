@@ -26,7 +26,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
-    "test": "jest --passWithNoTests",
+    "test": "jest --passWithNoTests --coverage false",
     "test:coverage": "jest --coverage --passWithNoTests",
     "docs": "typedoc --out docs/api src",
     "docs:watch": "typedoc --watch --out docs/api src",

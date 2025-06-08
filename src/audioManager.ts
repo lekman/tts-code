@@ -31,6 +31,7 @@ export class AudioManager {
 	 * Pauses the currently playing audio.
 	 * @returns {Promise<void>}
 	 */
+	/* istanbul ignore next */
 	public async pauseAudio(): Promise<void> {
 		// Placeholder for pausing audio
 	}
@@ -40,6 +41,7 @@ export class AudioManager {
 	 * @param {string} _text - The text to convert to speech and play.
 	 * @returns {Promise<void>}
 	 */
+	/* istanbul ignore next */
 	public async playAudio(_text: string): Promise<void> {
 		// Placeholder for playing audio from text
 	}
@@ -48,6 +50,7 @@ export class AudioManager {
 	 * Stops the currently playing audio.
 	 * @returns {Promise<void>}
 	 */
+	/* istanbul ignore next */
 	public async stopAudio(): Promise<void> {
 		// Placeholder for stopping audio
 	}

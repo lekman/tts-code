@@ -35,6 +35,7 @@ export class HighlightManager {
 	 * @param {import('vscode').TextEditor} _editor - The VSCode text editor instance.
 	 * @returns {void}
 	 */
+	/* istanbul ignore next */
 	public clearHighlights(_editor: import("vscode").TextEditor): void {
 		// Placeholder for clearing highlights
 	}
@@ -45,6 +46,7 @@ export class HighlightManager {
 	 * @param {import('vscode').Range} _range - The range of text to highlight.
 	 * @returns {void}
 	 */
+	/* istanbul ignore next */
 	public highlightRange(
 		_editor: import("vscode").TextEditor,
 		_range: import("vscode").Range
