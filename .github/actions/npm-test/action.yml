@@ -1,0 +1,95 @@
+name: "NPM Test"
+description: "Install dependencies, run tests, and upload results"
+inputs:
+  path:
+    description: "The relative path to the project directory"
+    required: true
+  name:
+    description: "The name of the project"
+    required: false
+  token:
+    description: "NPM authentication token"
+    required: true
+  node-version:
+    description: "Node.js version to use"
+    required: false
+    default: "22.14.0"
+  build:
+    description: "Disable to skip building"
+    required: false
+    default: "true"
+  test:
+    description: "Disable to skip running tests"
+    required: false
+    default: "true"
+  test-arguments:
+    description: "Arguments to pass to the test command"
+    required: false
+  coverage:
+    description: "Disable to run standard tests without coverage"
+    required: false
+    default: "true"
+  lint:
+    description: "Disable to skip linting"
+    required: false
+    default: "true"
+  audit:
+    description: "Disable to skip auditing"
+    required: false
+    default: "true"
+  skip-task-install:
+    description: "Disable to skip installing task runner"
+    required: false
+outputs:
+  junit:
+    description: "The path to the junit.xml file"
+    value: ${{ steps.test.outputs.junit_path }}
+  coverage:
+    description: "The path to the coverage-summary.json file"
+    value: ${{ steps.test.outputs.coverage_summary_path }}
+  audit:
+    description: "The path to the audit.json file"
+    value: ${{ steps.audit.outputs.evidence }}
+  lint:
+    description: "The path to the lint.json file"
+    value: ${{ steps.lint.outputs.evidence }}
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        registry-url: "https://npm.pkg.github.com"
+        cache: "npm"
+        cache-dependency-path: ${{ inputs.path }}/package-lock.json
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: |
+        npm install
+
+    - name: Build
+      if: ${{ inputs.build == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: npm run build --if-present
+
+    - name: Audit
+      if: ${{ inputs.audit == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: npm audit --omit=dev
+
+    - name: Test
+      if: ${{ inputs.test == 'true' && inputs.coverage != 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: npm run test --if-present
+
+    - name: Test with Coverage
+      if: ${{ inputs.test == 'true' && inputs.coverage == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: npm run test:coverage --if-present 
