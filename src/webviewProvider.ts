@@ -19,6 +19,18 @@
 import * as vscode from "vscode";
 
 /**
+ * Message types for webview communication
+ */
+export interface WebviewMessage {
+	type: string;
+	data?: string;
+	position?: number;
+	duration?: number;
+	error?: string;
+	format?: string;
+}
+
+/**
  * Provides a webview panel for playback controls and TTS UI in the extension.
  */
 export class WebviewProvider implements vscode.WebviewViewProvider {
@@ -27,9 +39,17 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 	 */
 	public static readonly viewType = "ttsCode.webview";
 
+	private _onDidReceiveMessage = new vscode.EventEmitter<WebviewMessage>();
+	/**
+	 * Event that fires when the webview sends a message
+	 */
+	public readonly onDidReceiveMessage = this._onDidReceiveMessage.event;
+
+	private _view?: vscode.WebviewView;
+
 	/**
 	 * Creates a new WebviewProvider instance.
-	 * @param {import('vscode').ExtensionContext} _context - The VSCode extension context for resource management.
+	 * @param {vscode.ExtensionContext} _context - The VSCode extension context for resource management.
 	 */
 	constructor(private readonly _context: vscode.ExtensionContext) {}
 
@@ -38,15 +58,26 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 	 * @returns {void}
 	 */
 	public dispose(): void {
-		// Dispose of any webview panels
-		// Clean up event listeners
+		this._onDidReceiveMessage.dispose();
+		this._view = undefined;
+	}
+
+	/**
+	 * Posts a message to the webview.
+	 * @param {WebviewMessage} message - The message to send.
+	 * @returns {void}
+	 */
+	public postMessage(message: WebviewMessage): void {
+		if (this._view) {
+			this._view.webview.postMessage(message);
+		}
 	}
 
 	/**
 	 * Resolves and displays the webview view with playback controls UI.
-	 * @param {import('vscode').WebviewView} webviewView - The webview view instance to populate.
-	 * @param {import('vscode').WebviewViewResolveContext} _context - The resolve context for the webview view.
-	 * @param {import('vscode').CancellationToken} _token - Cancellation token for the resolve operation.
+	 * @param {vscode.WebviewView} webviewView - The webview view instance to populate.
+	 * @param {vscode.WebviewViewResolveContext} _context - The resolve context for the webview view.
+	 * @param {vscode.CancellationToken} _token - Cancellation token for the resolve operation.
 	 * @returns {void}
 	 */
 	public resolveWebviewView(
@@ -54,26 +85,300 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 		_context: vscode.WebviewViewResolveContext,
 		_token: vscode.CancellationToken
 	): void {
+		this._view = webviewView;
+
 		webviewView.webview.options = {
 			enableScripts: true,
+			localResourceRoots: [this._context.extensionUri],
 		};
-		webviewView.webview.html = this.getHtmlForWebview();
+
+		webviewView.webview.html = this.getHtmlForWebview(webviewView.webview);
+
+		// Handle messages from the webview
+		webviewView.webview.onDidReceiveMessage(
+			(message) => {
+				this._onDidReceiveMessage.fire(message);
+			},
+			null,
+			this._context.subscriptions
+		);
 	}
 
 	/**
 	 * Returns the HTML content for the playback controls webview.
+	 * @param {vscode.Webview} webview - The webview instance.
 	 * @returns {string} The HTML string for the webview UI.
 	 */
-	private getHtmlForWebview(): string {
-		// Placeholder HTML for playback controls
-		return `
-			<html>
-				<body>
-					<h2>Playback Controls</h2>
-					<button>Play</button>
-					<button>Pause</button>
-				</body>
-			</html>
-		`;
+	private getHtmlForWebview(webview: vscode.Webview): string {
+		// Use a nonce to only allow specific scripts to run
+		const nonce = getNonce();
+
+		return `<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; media-src data: blob:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+				<title>TTS Playback Controls</title>
+				<style>
+					body {
+						padding: 10px;
+						font-family: var(--vscode-font-family);
+						font-size: var(--vscode-font-size);
+						color: var(--vscode-foreground);
+						background-color: var(--vscode-editor-background);
+					}
+					.controls {
+						display: flex;
+						align-items: center;
+						gap: 10px;
+						margin-bottom: 10px;
+					}
+					button {
+						background-color: var(--vscode-button-background);
+						color: var(--vscode-button-foreground);
+						border: none;
+						padding: 6px 14px;
+						cursor: pointer;
+						border-radius: 2px;
+					}
+					button:hover {
+						background-color: var(--vscode-button-hoverBackground);
+					}
+					button:disabled {
+						opacity: 0.5;
+						cursor: not-allowed;
+					}
+					.progress-container {
+						width: 100%;
+						margin: 10px 0;
+					}
+					#progressBar {
+						width: 100%;
+						height: 5px;
+						cursor: pointer;
+					}
+					.time-display {
+						display: flex;
+						justify-content: space-between;
+						font-size: 12px;
+						color: var(--vscode-descriptionForeground);
+					}
+					.status {
+						margin-top: 10px;
+						font-size: 12px;
+						color: var(--vscode-descriptionForeground);
+					}
+					audio {
+						display: none;
+					}
+				</style>
+			</head>
+			<body>
+				<h3>TTS Playback Controls</h3>
+				
+				<audio id="audioPlayer"></audio>
+				
+				<div class="controls">
+					<button id="playBtn" disabled>▶️ Play</button>
+					<button id="pauseBtn" disabled>⏸️ Pause</button>
+					<button id="stopBtn" disabled>⏹️ Stop</button>
+					<button id="skipBackBtn" disabled>⏪ -10s</button>
+					<button id="skipForwardBtn" disabled>⏩ +10s</button>
+				</div>
+				
+				<div class="progress-container">
+					<input type="range" id="progressBar" min="0" max="100" value="0" disabled>
+					<div class="time-display">
+						<span id="currentTime">0:00</span>
+						<span id="duration">0:00</span>
+					</div>
+				</div>
+				
+				<div class="status" id="status">Ready</div>
+				
+				<script nonce="${nonce}">
+					const vscode = acquireVsCodeApi();
+					const audioPlayer = document.getElementById('audioPlayer');
+					const playBtn = document.getElementById('playBtn');
+					const pauseBtn = document.getElementById('pauseBtn');
+					const stopBtn = document.getElementById('stopBtn');
+					const skipBackBtn = document.getElementById('skipBackBtn');
+					const skipForwardBtn = document.getElementById('skipForwardBtn');
+					const progressBar = document.getElementById('progressBar');
+					const currentTimeSpan = document.getElementById('currentTime');
+					const durationSpan = document.getElementById('duration');
+					const statusDiv = document.getElementById('status');
+					
+					let isLoaded = false;
+					
+					// Format time in mm:ss
+					function formatTime(seconds) {
+						const mins = Math.floor(seconds / 60);
+						const secs = Math.floor(seconds % 60);
+						return mins + ':' + secs.toString().padStart(2, '0');
+					}
+					
+					// Update UI state
+					function updateUI() {
+						const isPaused = audioPlayer.paused;
+						const hasAudio = isLoaded && audioPlayer.src;
+						
+						playBtn.disabled = !hasAudio || !isPaused;
+						pauseBtn.disabled = !hasAudio || isPaused;
+						stopBtn.disabled = !hasAudio;
+						skipBackBtn.disabled = !hasAudio;
+						skipForwardBtn.disabled = !hasAudio;
+						progressBar.disabled = !hasAudio;
+						
+						if (hasAudio) {
+							currentTimeSpan.textContent = formatTime(audioPlayer.currentTime);
+							durationSpan.textContent = formatTime(audioPlayer.duration || 0);
+							progressBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100 || 0;
+						}
+					}
+					
+					// Handle messages from extension
+					window.addEventListener('message', event => {
+						const message = event.data;
+						
+						switch (message.type) {
+							case 'loadAudio':
+								statusDiv.textContent = 'Loading audio...';
+								const blob = new Blob(
+									[Uint8Array.from(atob(message.data), c => c.charCodeAt(0))],
+									{ type: 'audio/mpeg' }
+								);
+								const url = URL.createObjectURL(blob);
+								audioPlayer.src = url;
+								audioPlayer.load();
+								break;
+								
+							case 'play':
+								if (isLoaded) {
+									audioPlayer.play();
+								}
+								break;
+								
+							case 'pause':
+								audioPlayer.pause();
+								break;
+								
+							case 'stop':
+								audioPlayer.pause();
+								audioPlayer.currentTime = 0;
+								updateUI();
+								break;
+								
+							case 'seek':
+								if (message.position !== undefined) {
+									audioPlayer.currentTime = message.position;
+								}
+								break;
+						}
+					});
+					
+					// Audio player events
+					audioPlayer.addEventListener('loadeddata', () => {
+						isLoaded = true;
+						statusDiv.textContent = 'Audio loaded';
+						updateUI();
+						vscode.postMessage({ 
+							type: 'audioLoaded',
+							duration: audioPlayer.duration
+						});
+					});
+					
+					audioPlayer.addEventListener('play', () => {
+						statusDiv.textContent = 'Playing';
+						updateUI();
+						vscode.postMessage({ type: 'playing' });
+					});
+					
+					audioPlayer.addEventListener('pause', () => {
+						statusDiv.textContent = 'Paused';
+						updateUI();
+						vscode.postMessage({ type: 'paused' });
+					});
+					
+					audioPlayer.addEventListener('ended', () => {
+						statusDiv.textContent = 'Finished';
+						updateUI();
+						vscode.postMessage({ type: 'ended' });
+					});
+					
+					audioPlayer.addEventListener('timeupdate', () => {
+						updateUI();
+						vscode.postMessage({ 
+							type: 'timeUpdate',
+							position: audioPlayer.currentTime
+						});
+					});
+					
+					audioPlayer.addEventListener('error', (e) => {
+						statusDiv.textContent = 'Error loading audio';
+						console.error('Audio error:', e);
+						vscode.postMessage({ 
+							type: 'error',
+							error: e.message
+						});
+					});
+					
+					// Button handlers
+					playBtn.addEventListener('click', () => {
+						audioPlayer.play();
+						vscode.postMessage({ type: 'playClicked' });
+					});
+					
+					pauseBtn.addEventListener('click', () => {
+						audioPlayer.pause();
+						vscode.postMessage({ type: 'pauseClicked' });
+					});
+					
+					stopBtn.addEventListener('click', () => {
+						audioPlayer.pause();
+						audioPlayer.currentTime = 0;
+						updateUI();
+						vscode.postMessage({ type: 'stopClicked' });
+					});
+					
+					skipBackBtn.addEventListener('click', () => {
+						audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 10);
+						vscode.postMessage({ type: 'skipBackClicked' });
+					});
+					
+					skipForwardBtn.addEventListener('click', () => {
+						audioPlayer.currentTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 10);
+						vscode.postMessage({ type: 'skipForwardClicked' });
+					});
+					
+					progressBar.addEventListener('input', () => {
+						const time = (progressBar.value / 100) * audioPlayer.duration;
+						audioPlayer.currentTime = time;
+						vscode.postMessage({ 
+							type: 'seeked',
+							position: time
+						});
+					});
+					
+					// Initial UI update
+					updateUI();
+				</script>
+			</body>
+			</html>`;
 	}
+}
+
+/**
+ * Generates a random nonce for content security policy.
+ * @returns {string} A random nonce string.
+ */
+function getNonce(): string {
+	let text = "";
+	const possible =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	for (let i = 0; i < 32; i++) {
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+	return text;
 }

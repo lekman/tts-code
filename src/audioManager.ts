@@ -19,6 +19,7 @@
 import * as vscode from "vscode";
 
 import { ElevenLabsClient } from "./elevenLabsClient";
+import { WebviewProvider } from "./webviewProvider";
 
 /**
  * Playback state for audio
@@ -29,8 +30,10 @@ export type PlaybackState = "playing" | "paused" | "stopped";
  * Playback event types
  */
 export interface PlaybackEvent {
-	type: "play" | "pause" | "resume" | "stop" | "seek";
+	type: "play" | "pause" | "resume" | "stop" | "seek" | "progress" | "duration";
 	position: number;
+	duration?: number;
+	audioData?: Buffer;
 }
 
 /**
@@ -41,11 +44,13 @@ export class AudioManager {
 	private audioCache: Map<string, Buffer> = new Map();
 	private currentAudioData?: Buffer;
 	private currentCacheSize = 0;
+	private currentDuration: number = 0;
 	private currentPlaybackState: PlaybackState = "stopped";
 	private currentPosition: number = 0;
 	private elevenLabsClient?: ElevenLabsClient;
 	private eventEmitter = new vscode.EventEmitter<PlaybackEvent>();
 	private readonly MAX_CACHE_SIZE = 100 * 1024 * 1024; // 100MB
+	private webviewProvider?: WebviewProvider;
 
 	/**
 	 * Cleans up resources used by the AudioManager.
@@ -155,6 +160,14 @@ export class AudioManager {
 	}
 
 	/**
+	 * Gets the current audio duration.
+	 * @returns {number} The duration in seconds.
+	 */
+	public getCurrentDuration(): number {
+		return this.currentDuration;
+	}
+
+	/**
 	 * Gets the current playback position.
 	 * @returns {number} The current position in seconds.
 	 */
@@ -206,7 +219,24 @@ export class AudioManager {
 		this.currentAudioData = audioData;
 		this.currentPlaybackState = "playing";
 		this.currentPosition = startPosition;
-		this.eventEmitter.fire({ type: "play", position: startPosition });
+
+		// Calculate duration based on audio format (MP3 at 128kbps)
+		// This is an approximation - actual duration should come from webview
+		const bitrate = 128000; // 128 kbps
+		const durationSeconds = (audioData.length * 8) / bitrate;
+		this.currentDuration = durationSeconds;
+
+		this.eventEmitter.fire({
+			type: "play",
+			position: startPosition,
+			duration: durationSeconds,
+			audioData: audioData,
+		});
+
+		// Send audio to webview if available
+		if (this.webviewProvider) {
+			this.sendAudioToWebview(audioData);
+		}
 	}
 
 	/**
@@ -216,6 +246,15 @@ export class AudioManager {
 	public resume(): void {
 		this.currentPlaybackState = "playing";
 		this.eventEmitter.fire({ type: "resume", position: this.currentPosition });
+	}
+
+	/**
+	 * Sets the webview provider for audio playback.
+	 * @param {WebviewProvider} webviewProvider - The webview provider instance.
+	 * @returns {void}
+	 */
+	public setWebviewProvider(webviewProvider: WebviewProvider): void {
+		this.webviewProvider = webviewProvider;
 	}
 
 	/**
@@ -234,7 +273,11 @@ export class AudioManager {
 	 * @returns {void}
 	 */
 	public skipForward(seconds: number = 10): void {
-		this.currentPosition += seconds;
+		const newPosition = Math.min(
+			this.currentPosition + seconds,
+			this.currentDuration
+		);
+		this.currentPosition = newPosition;
 		this.eventEmitter.fire({ type: "seek", position: this.currentPosition });
 	}
 
@@ -246,6 +289,16 @@ export class AudioManager {
 		this.currentPlaybackState = "stopped";
 		this.currentPosition = 0;
 		this.eventEmitter.fire({ type: "stop", position: 0 });
+	}
+
+	/**
+	 * Updates the playback position from the webview.
+	 * @param {number} position - The new position in seconds.
+	 * @returns {void}
+	 */
+	public updatePosition(position: number): void {
+		this.currentPosition = position;
+		this.eventEmitter.fire({ type: "progress", position });
 	}
 
 	/**
@@ -278,5 +331,26 @@ export class AudioManager {
 		// Add new item
 		this.audioCache.set(key, data);
 		this.currentCacheSize += dataSize;
+	}
+
+	/**
+	 * Sends audio data to the webview for playback.
+	 * @param {Buffer} audioData - The audio data to send.
+	 * @returns {void}
+	 */
+	private sendAudioToWebview(audioData: Buffer): void {
+		if (!this.webviewProvider) {
+			return;
+		}
+
+		// Convert buffer to base64 for webview transfer
+		const base64Audio = audioData.toString("base64");
+
+		// Send message to webview
+		this.webviewProvider.postMessage({
+			type: "loadAudio",
+			data: base64Audio,
+			format: "mp3",
+		});
 	}
 }

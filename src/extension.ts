@@ -42,6 +42,49 @@ export function activate(context: vscode.ExtensionContext) {
 	// Mark storageManager as used (will be used in later tasks)
 	void storageManager;
 
+	// Connect AudioManager with WebviewProvider
+	audioManager.setWebviewProvider(webviewProvider);
+
+	// Handle webview messages
+	webviewProvider.onDidReceiveMessage((message) => {
+		switch (message.type) {
+			case "playClicked":
+				if (audioManager.getCurrentAudioData()) {
+					audioManager.resume();
+				}
+				break;
+			case "pauseClicked":
+				audioManager.pause();
+				break;
+			case "stopClicked":
+				audioManager.stop();
+				break;
+			case "skipBackClicked":
+				audioManager.skipBackward();
+				break;
+			case "skipForwardClicked":
+				audioManager.skipForward();
+				break;
+			case "timeUpdate":
+				if (message.position !== undefined) {
+					audioManager.updatePosition(message.position);
+				}
+				break;
+			case "audioLoaded":
+				if (message.duration !== undefined) {
+					// Update duration in audio manager
+					const currentAudioData = audioManager.getCurrentAudioData();
+					if (currentAudioData) {
+						audioManager.play(currentAudioData, 0);
+					}
+				}
+				break;
+			case "ended":
+				audioManager.stop();
+				break;
+		}
+	});
+
 	// Store managers in context for disposal
 	context.subscriptions.push(
 		{ dispose: () => audioManager.dispose() },
@@ -102,12 +145,16 @@ export function activate(context: vscode.ExtensionContext) {
 						// Set active editor for highlighting
 						highlightManager.setActiveEditor(editor);
 
-						// TODO: Send audio to webview when WebviewProvider is fully implemented
-						// webviewProvider.sendAudioToWebview(audioData, document.fileName);
+						// Play the audio
+						audioManager.play(audioData);
 
-						// For now, show a success message
+						// Show the webview panel
+						await vscode.commands.executeCommand(
+							"workbench.view.extension.ttsCodeView"
+						);
+
 						vscode.window.showInformationMessage(
-							`Audio generated successfully (${audioData.length} bytes)`
+							`Audio generated and loaded for playback`
 						);
 					}
 				);
@@ -178,12 +225,16 @@ export function activate(context: vscode.ExtensionContext) {
 							new vscode.Range(selection.start, selection.end)
 						);
 
-						// TODO: Send audio to webview when WebviewProvider is fully implemented
-						// webviewProvider.sendAudioToWebview(audioData, "Selection");
+						// Play the audio
+						audioManager.play(audioData);
 
-						// For now, show a success message
+						// Show the webview panel
+						await vscode.commands.executeCommand(
+							"workbench.view.extension.ttsCodeView"
+						);
+
 						vscode.window.showInformationMessage(
-							`Audio generated for selection (${audioData.length} bytes)`
+							`Audio generated for selection and loaded for playback`
 						);
 					}
 				);
