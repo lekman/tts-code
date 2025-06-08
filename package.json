@@ -43,7 +43,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@git:lekman/tts-code.git"
+    "url": "https://github.com/lekman/tts-code"
   },
   "keywords": [
     "vscode",
@@ -121,6 +121,26 @@
           "command": "ttsCode.speakSelection",
           "when": "editorHasSelection && resourceExtname =~ /\\.(md|txt)$/",
           "group": "navigation"
+        }
+      ]
+    },
+    "views": {
+      "ttsCodeView": [
+        {
+          "type": "webview",
+          "id": "ttsCode.webview",
+          "name": "TTS Playback",
+          "icon": "$(play)",
+          "contextualTitle": "TTS Playback Controls"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ttsCodeView",
+          "title": "TTS Playback",
+          "icon": "$(play-circle)"
         }
       ]
     }
