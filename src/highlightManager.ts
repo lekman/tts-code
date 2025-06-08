@@ -16,8 +16,7 @@
  * https://github.com/lekman/tts-code
  */
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import * as vscode from "vscode";
+// import * as vscode from "vscode"; // TODO: Uncomment when implementing functionality
 
 /**
  * Handles text highlighting and synchronization for the TTS extension.
@@ -38,6 +37,15 @@ export class HighlightManager {
 	/* istanbul ignore next */
 	public clearHighlights(_editor: import("vscode").TextEditor): void {
 		// Placeholder for clearing highlights
+	}
+
+	/**
+	 * Disposes of the highlight manager and cleans up resources.
+	 * @returns {void}
+	 */
+	public dispose(): void {
+		// Clear any active highlights
+		// Dispose of decoration types
 	}
 
 	/**

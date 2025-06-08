@@ -28,6 +28,16 @@ export class AudioManager {
 	}
 
 	/**
+	 * Disposes of the audio manager and cleans up resources.
+	 * @returns {void}
+	 */
+	public dispose(): void {
+		// Stop any playing audio
+		this.stopAudio();
+		// Clean up any other resources
+	}
+
+	/**
 	 * Pauses the currently playing audio.
 	 * @returns {Promise<void>}
 	 */

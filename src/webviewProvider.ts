@@ -34,6 +34,15 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 	constructor(private readonly _context: vscode.ExtensionContext) {}
 
 	/**
+	 * Disposes of the webview provider and cleans up resources.
+	 * @returns {void}
+	 */
+	public dispose(): void {
+		// Dispose of any webview panels
+		// Clean up event listeners
+	}
+
+	/**
 	 * Resolves and displays the webview view with playback controls UI.
 	 * @param {import('vscode').WebviewView} webviewView - The webview view instance to populate.
 	 * @param {import('vscode').WebviewViewResolveContext} _context - The resolve context for the webview view.

@@ -19,15 +19,29 @@
 import { AudioManager } from "../src/audioManager";
 
 describe("AudioManager", () => {
+	let audioManager: AudioManager;
+
+	beforeEach(() => {
+		audioManager = new AudioManager();
+	});
+
 	it("should instantiate", () => {
-		const manager = new AudioManager();
-		expect(manager).toBeInstanceOf(AudioManager);
+		expect(audioManager).toBeInstanceOf(AudioManager);
 	});
 
 	it("should have playAudio, pauseAudio, and stopAudio methods", () => {
-		const manager = new AudioManager();
-		expect(typeof manager.playAudio).toBe("function");
-		expect(typeof manager.pauseAudio).toBe("function");
-		expect(typeof manager.stopAudio).toBe("function");
+		expect(typeof audioManager.playAudio).toBe("function");
+		expect(typeof audioManager.pauseAudio).toBe("function");
+		expect(typeof audioManager.stopAudio).toBe("function");
+	});
+
+	it("should have dispose method", () => {
+		expect(typeof audioManager.dispose).toBe("function");
+	});
+
+	it("should call stopAudio when disposed", () => {
+		const stopAudioSpy = jest.spyOn(audioManager, "stopAudio");
+		audioManager.dispose();
+		expect(stopAudioSpy).toHaveBeenCalled();
 	});
 });

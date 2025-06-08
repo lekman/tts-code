@@ -19,14 +19,26 @@
 import { HighlightManager } from "../src/highlightManager";
 
 describe("HighlightManager", () => {
+	let highlightManager: HighlightManager;
+
+	beforeEach(() => {
+		highlightManager = new HighlightManager();
+	});
+
 	it("should instantiate", () => {
-		const manager = new HighlightManager();
-		expect(manager).toBeInstanceOf(HighlightManager);
+		expect(highlightManager).toBeInstanceOf(HighlightManager);
 	});
 
 	it("should have highlightRange and clearHighlights methods", () => {
-		const manager = new HighlightManager();
-		expect(typeof manager.highlightRange).toBe("function");
-		expect(typeof manager.clearHighlights).toBe("function");
+		expect(typeof highlightManager.highlightRange).toBe("function");
+		expect(typeof highlightManager.clearHighlights).toBe("function");
+	});
+
+	it("should have dispose method", () => {
+		expect(typeof highlightManager.dispose).toBe("function");
+	});
+
+	it("should call dispose without error", () => {
+		expect(() => highlightManager.dispose()).not.toThrow();
 	});
 });

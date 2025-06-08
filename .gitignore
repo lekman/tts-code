@@ -413,8 +413,12 @@ tasks
 .roomodes
 CLAUDE.md
 
+# Specific shared settings for debug and start
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
 # Local settings
-.vscode/
 .npmrc
 
 # Test results and coverage
