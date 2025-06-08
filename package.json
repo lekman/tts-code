@@ -8,6 +8,7 @@
     "vscode": "^1.74.0"
   },
   "activationEvents": [
+    "onCommand:ttsCode.speakText",
     "onLanguage:markdown",
     "onLanguage:plaintext"
   ],
@@ -73,5 +74,13 @@
     "typedoc-plugin-markdown": "^4.6.3",
     "typescript": "5.3.3",
     "webpack-cli": "^6.0.1"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "ttsCode.speakText",
+        "title": "Speak Text"
+      }
+    ]
   }
 }

@@ -20,7 +20,7 @@ import * as vscode from "vscode";
 
 /**
  * Activates the ElevenLabs Text-to-Speech extension.
- * Registers commands and initializes extension services.
+ * Registers the Speak Text command and initializes extension services.
  *
  * @param {vscode.ExtensionContext} context - The VSCode extension context for managing disposables and state.
  */
@@ -35,7 +35,17 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 
+	const speakTextCommand = vscode.commands.registerCommand(
+		"ttsCode.speakText",
+		() => {
+			vscode.window.showInformationMessage(
+				"Text-to-Speech activated! (This is a placeholder)"
+			);
+		}
+	);
+
 	context.subscriptions.push(disposable);
+	context.subscriptions.push(speakTextCommand);
 }
 
 /**
