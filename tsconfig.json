@@ -1,0 +1,63 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "es2017",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@interfaces/*": ["src/interfaces/*"],
+      "@enums/*": ["src/enums/*"],
+      "@models/*": ["src/models/*"],
+      "@repositories/*": ["src/repositories/*"],
+      "@test/*": ["test/*"],
+      "@errors/*": ["src/errors/*"],
+      "@mocks/*": ["test/mocks/*"],
+      "@dtos/*": ["src/dtos/*"],
+      "@maps/*": ["src/maps/*"],
+      "@ops/*": ["src/ops/*"],
+      "@services/*": ["src/services/*"],
+      "@controllers/*": ["src/controllers/*"]
+    },
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "jest.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "scripts",
+    "temp",
+    "**/backup/**",
+    "**/*.backup.*",
+    "**/*.js",
+    "**/*.d.ts",
+    "coverage",
+    "dist/**/*"
+  ],
+  "overrides": [
+    {
+      "files": ["test/**/*.ts"],
+      "compilerOptions": {
+        "noImplicitAny": false,
+        "strictNullChecks": false
+      }
+    }
+  ]
+}

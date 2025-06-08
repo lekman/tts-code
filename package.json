@@ -1,0 +1,76 @@
+{
+  "name": "@lekman/tts-code",
+  "displayName": "ElevenLabs Text-to-Speech for VSCode",
+  "version": "0.0.1",
+  "description": "Add professional text-to-speech to VSCode with one click—featuring playback controls, text highlighting, and audio export.",
+  "type": "module",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onLanguage:plaintext"
+  ],
+  "categories": [
+    "Accessibility",
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "test": "jest",
+    "docs": "typedoc --out docs/api src",
+    "docs:watch": "typedoc --watch --out docs/api src",
+    "webpack": "webpack --mode production --config webpack.config.js",
+    "webpack:dev": "webpack --mode development --watch --config webpack.config.js",
+    "tsc:check": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@git:lekman/tts-code.git"
+  },
+  "keywords": [
+    "vscode",
+    "extension",
+    "tts",
+    "elevenlabs",
+    "ai"
+  ],
+  "author": "Tobias Lekman",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "@types/vscode": "^1.100.0",
+    "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "clean-webpack-plugin": "^4.0.0",
+    "eslint": "^9.27.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-header": "^3.1.1",
+    "eslint-plugin-headers": "^1.2.1",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jest": "^28.11.0",
+    "eslint-plugin-jsdoc": "^50.6.17",
+    "eslint-plugin-perfectionist": "^4.13.0",
+    "eslint-plugin-prettier": "^5.4.0",
+    "jest": "^29.7.0",
+    "jest-html-reporter": "^4.1.0",
+    "jest-junit": "^16.0.0",
+    "jest-stare": "^2.5.2",
+    "mkdirp": "^1.0.4",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.3.2",
+    "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
+    "typedoc": "^0.28.0",
+    "typedoc-plugin-markdown": "^4.6.3",
+    "typescript": "5.3.3",
+    "webpack-cli": "^6.0.1"
+  }
+}
