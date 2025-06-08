@@ -28,7 +28,7 @@ const perfectionist = require("eslint-plugin-perfectionist");
 
 module.exports = [
 	{
-		ignores: ["dist/**", "node_modules/**", "build/**", "**/*.js", "**/*.mjs"],
+		ignores: ["dist/**", "node_modules/**", "build/**", "out/**", "**/*.js", "**/*.mjs"],
 	},
 	eslint.configs.recommended,
 	{
@@ -46,6 +46,10 @@ module.exports = [
 				__dirname: "readonly",
 				module: "readonly",
 				require: "readonly",
+				console: "readonly",
+				Buffer: "readonly",
+				// Browser globals (for fetch)
+				fetch: "readonly",
 				// Jest globals
 				describe: "readonly",
 				it: "readonly",

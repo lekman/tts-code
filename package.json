@@ -20,7 +20,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "vscode:prepublish": "npm run webpack",
+    "vscode:prepublish": "npm run webpack; npm run docs",
     "compile": "webpack",
     "watch": "webpack --watch",
     "package": "webpack --mode production --devtool hidden-source-map",
@@ -33,6 +33,7 @@
     "lint:fix": "eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "test": "jest --passWithNoTests --coverage false",
+    "ci": "npm audit --audit-level=moderate && npm run lint:fix && npm run compile && npm run test",
     "test:coverage": "jest --coverage --passWithNoTests",
     "docs": "typedoc --out docs/api src",
     "docs:watch": "typedoc --watch --out docs/api src",
@@ -108,6 +109,10 @@
       {
         "command": "ttsCode.exportAudio",
         "title": "TTS: Export Audio"
+      },
+      {
+        "command": "ttsCode.resetApiKey",
+        "title": "TTS: Reset API Key"
       }
     ],
     "menus": {
@@ -119,5 +124,8 @@
         }
       ]
     }
+  },
+  "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.2.0"
   }
 }

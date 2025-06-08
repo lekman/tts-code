@@ -18,7 +18,9 @@
 
 import * as vscode from "vscode";
 
+import { ApiKeyManager } from "./apiKeyManager";
 import { AudioManager } from "./audioManager";
+import { AuthenticationError } from "./elevenLabsClient";
 import { HighlightManager } from "./highlightManager";
 import { StorageManager } from "./storageManager";
 import { WebviewProvider } from "./webviewProvider";
@@ -31,13 +33,13 @@ import { WebviewProvider } from "./webviewProvider";
  */
 export function activate(context: vscode.ExtensionContext) {
 	// Initialize managers with proper dependencies
+	const apiKeyManager = new ApiKeyManager(context);
 	const storageManager = new StorageManager(context);
 	const audioManager = new AudioManager();
 	const highlightManager = new HighlightManager();
 	const webviewProvider = new WebviewProvider(context);
 
-	// TODO: Pass storageManager to audioManager when constructor is updated
-	// For now, mark as intentionally unused
+	// Mark storageManager as used (will be used in later tasks)
 	void storageManager;
 
 	// Store managers in context for disposal
@@ -74,6 +76,15 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
+			// Ensure we have an API key
+			const apiKey = await apiKeyManager.ensureApiKey();
+			if (!apiKey) {
+				return;
+			}
+
+			// Initialize audio manager with API key
+			audioManager.initialize(apiKey);
+
 			try {
 				await vscode.window.withProgress(
 					{
@@ -82,26 +93,47 @@ export function activate(context: vscode.ExtensionContext) {
 						cancellable: false,
 					},
 					async () => {
-						// TODO: Generate audio when AudioManager is fully implemented
-						// const audioData = await audioManager.generateAudio(text, document.uri.toString());
-						// highlightManager.setActiveEditor(editor);
+						// Generate audio
+						const audioData = await audioManager.generateAudio(
+							text,
+							document.uri.toString()
+						);
+
+						// Set active editor for highlighting
+						highlightManager.setActiveEditor(editor);
+
+						// TODO: Send audio to webview when WebviewProvider is fully implemented
 						// webviewProvider.sendAudioToWebview(audioData, document.fileName);
 
-						// For now, just show a message
+						// For now, show a success message
 						vscode.window.showInformationMessage(
-							`[TTS] Would speak ${text.length} characters from ${document.fileName}`
+							`Audio generated successfully (${audioData.length} bytes)`
 						);
 					}
 				);
 			} catch (error) {
-				vscode.window.showErrorMessage(`Failed to generate audio: ${error}`);
+				if (error instanceof AuthenticationError) {
+					// Show warning and automatically trigger API key reset
+					vscode.window
+						.showWarningMessage(
+							"Invalid API key detected. Please enter a new API key.",
+							"Reset API Key"
+						)
+						.then((buttonSelection) => {
+							if (buttonSelection === "Reset API Key") {
+								vscode.commands.executeCommand("ttsCode.resetApiKey");
+							}
+						});
+				} else {
+					vscode.window.showErrorMessage(`Failed to generate audio: ${error}`);
+				}
 			}
 		}
 	);
 
 	const speakSelectionCommand = vscode.commands.registerCommand(
 		"ttsCode.speakSelection",
-		() => {
+		async () => {
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) {
 				vscode.window.showWarningMessage("No active editor!");
@@ -116,9 +148,62 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			vscode.window.showInformationMessage(
-				`[TTS] Speaking selection: "${selectedText.substring(0, 50)}${selectedText.length > 50 ? "..." : ""}"`
-			);
+			// Ensure we have an API key
+			const apiKey = await apiKeyManager.ensureApiKey();
+			if (!apiKey) {
+				return;
+			}
+
+			// Initialize audio manager with API key
+			audioManager.initialize(apiKey);
+
+			try {
+				await vscode.window.withProgress(
+					{
+						location: vscode.ProgressLocation.Notification,
+						title: "Generating audio for selection...",
+						cancellable: false,
+					},
+					async () => {
+						// Generate audio for selection
+						const selectionKey = `${editor.document.uri.toString()}_selection_${selection.start.line}_${selection.start.character}_${selection.end.line}_${selection.end.character}`;
+						const audioData = await audioManager.generateAudio(
+							selectedText,
+							selectionKey
+						);
+
+						// Set active editor for highlighting
+						highlightManager.setActiveEditor(editor);
+						highlightManager.highlightRange(
+							new vscode.Range(selection.start, selection.end)
+						);
+
+						// TODO: Send audio to webview when WebviewProvider is fully implemented
+						// webviewProvider.sendAudioToWebview(audioData, "Selection");
+
+						// For now, show a success message
+						vscode.window.showInformationMessage(
+							`Audio generated for selection (${audioData.length} bytes)`
+						);
+					}
+				);
+			} catch (error) {
+				if (error instanceof AuthenticationError) {
+					// Show warning and automatically trigger API key reset
+					vscode.window
+						.showWarningMessage(
+							"Invalid API key detected. Please enter a new API key.",
+							"Reset API Key"
+						)
+						.then((buttonSelection) => {
+							if (buttonSelection === "Reset API Key") {
+								vscode.commands.executeCommand("ttsCode.resetApiKey");
+							}
+						});
+				} else {
+					vscode.window.showErrorMessage(`Failed to generate audio: ${error}`);
+				}
+			}
 		}
 	);
 
@@ -158,13 +243,21 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 
+	const resetApiKeyCommand = vscode.commands.registerCommand(
+		"ttsCode.resetApiKey",
+		async () => {
+			await apiKeyManager.resetApiKey();
+		}
+	);
+
 	context.subscriptions.push(
 		speakTextCommand,
 		speakSelectionCommand,
 		pauseResumeCommand,
 		skipForwardCommand,
 		skipBackwardCommand,
-		exportAudioCommand
+		exportAudioCommand,
+		resetApiKeyCommand
 	);
 
 	// Register the webview provider (if needed)

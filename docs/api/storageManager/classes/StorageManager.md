@@ -6,7 +6,7 @@
 
 # Class: StorageManager
 
-Defined in: storageManager.ts:25
+Defined in: storageManager.ts:24
 
 Manages file operations, caching, and audio export for the TTS extension.
 
@@ -48,7 +48,7 @@ The VSCode extension context for accessing storage locations.
 
 > **getAudioCache**(`_key`): `Promise`\<`Uint8Array`\>
 
-Defined in: storageManager.ts:37
+Defined in: storageManager.ts:38
 
 Retrieves audio data from the cache by key.
 
@@ -72,7 +72,7 @@ The cached audio data, or undefined if not found.
 
 > **saveAudioFile**(`_data`, `_fileName`): `Promise`\<`Uri`\>
 
-Defined in: storageManager.ts:48
+Defined in: storageManager.ts:50
 
 Saves an audio file to a user-specified location.
 
@@ -102,7 +102,7 @@ The URI of the saved file, or undefined if not saved.
 
 > **setAudioCache**(`_key`, `_data`): `Promise`\<`void`\>
 
-Defined in: storageManager.ts:62
+Defined in: storageManager.ts:65
 
 Caches audio data for later retrieval.
 

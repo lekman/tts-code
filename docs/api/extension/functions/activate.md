@@ -8,10 +8,10 @@
 
 > **activate**(`context`): `void`
 
-Defined in: extension.ts:27
+Defined in: extension.ts:34
 
 Activates the ElevenLabs Text-to-Speech extension.
-Registers commands and initializes extension services.
+Registers the Speak Text command and initializes extension services.
 
 ## Parameters
 

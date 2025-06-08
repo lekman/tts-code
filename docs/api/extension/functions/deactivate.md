@@ -8,7 +8,7 @@
 
 > **deactivate**(): `void`
 
-Defined in: extension.ts:47
+Defined in: extension.ts:278
 
 Deactivates the ElevenLabs Text-to-Speech extension.
 Used for cleanup when the extension is unloaded.
