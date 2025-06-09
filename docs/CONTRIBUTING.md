@@ -10,9 +10,20 @@ Please follow the guidelines below to get started with development or contributi
 
 ## Development Mode
 
-To run the extension locally for development and testing:
+1. **Clone the repository:**
 
-1. **Open the project in VS Code**
+   ```bash
+   git clone https://github.com/lekman/tts-code.git
+   cd tts-code
+   ```
+
+2. **Install dependencies:**
+
+   ```bash
+   npm install
+   ```
+
+3. **Open the project in VS Code**
    ```bash
    code .
    ```
