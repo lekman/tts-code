@@ -1,7 +1,7 @@
 {
   "name": "tts-code",
   "displayName": "ElevenLabs Text-to-Speech for VSCode",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Add professional text-to-speech to VSCode with one click—featuring playback controls, text highlighting, and audio export.",
   "publisher": "Tobias Lekman",
   "type": "commonjs",
