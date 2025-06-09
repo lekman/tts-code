@@ -3,12 +3,11 @@
   "displayName": "ElevenLabs Text-to-Speech for VSCode",
   "version": "0.0.1",
   "description": "Add professional text-to-speech to VSCode with one click—featuring playback controls, text highlighting, and audio export.",
-  "type": "module",
+  "type": "commonjs",
   "engines": {
     "vscode": "^1.74.0"
   },
   "activationEvents": [
-    "onCommand:ttsCode.speakText",
     "onLanguage:markdown",
     "onLanguage:plaintext"
   ],
@@ -21,12 +20,20 @@
     "doc": "docs"
   },
   "scripts": {
+    "vscode:prepublish": "npm run webpack; npm run docs",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "build": "tsc",
     "dev": "tsc -w",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "test": "jest --passWithNoTests --coverage false",
+    "ci": "npm audit --audit-level=moderate && npm run lint:fix && npm run test",
     "test:coverage": "jest --coverage --passWithNoTests",
     "docs": "typedoc --out docs/api src",
     "docs:watch": "typedoc --watch --out docs/api src",
@@ -36,7 +43,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@git:lekman/tts-code.git"
+    "url": "https://github.com/lekman/tts-code"
   },
   "keywords": [
     "vscode",
@@ -48,6 +55,7 @@
   "author": "Tobias Lekman",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
+    "@types/node": "^20.19.0",
     "@types/vscode": "^1.100.0",
     "@typescript-eslint/eslint-plugin": "^8.33.1",
     "clean-webpack-plugin": "^4.0.0",
@@ -73,14 +81,71 @@
     "typedoc": "^0.28.0",
     "typedoc-plugin-markdown": "^4.6.3",
     "typescript": "5.3.3",
+    "webpack": "^5.99.9",
     "webpack-cli": "^6.0.1"
   },
   "contributes": {
     "commands": [
       {
         "command": "ttsCode.speakText",
-        "title": "Speak Text"
+        "title": "TTS: Speak Text"
+      },
+      {
+        "command": "ttsCode.speakSelection",
+        "title": "TTS: Speak Selection"
+      },
+      {
+        "command": "ttsCode.pauseResume",
+        "title": "TTS: Pause/Resume"
+      },
+      {
+        "command": "ttsCode.skipForward",
+        "title": "TTS: Skip Forward"
+      },
+      {
+        "command": "ttsCode.skipBackward",
+        "title": "TTS: Skip Backward"
+      },
+      {
+        "command": "ttsCode.exportAudio",
+        "title": "TTS: Export Audio"
+      },
+      {
+        "command": "ttsCode.resetApiKey",
+        "title": "TTS: Reset API Key"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "ttsCode.speakSelection",
+          "when": "editorHasSelection && resourceExtname =~ /\\.(md|txt)$/",
+          "group": "navigation"
+        }
+      ]
+    },
+    "views": {
+      "ttsCodeView": [
+        {
+          "type": "webview",
+          "id": "ttsCode.webview",
+          "name": "TTS Playback",
+          "icon": "$(play)",
+          "contextualTitle": "TTS Playback Controls"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ttsCodeView",
+          "title": "TTS Playback",
+          "icon": "$(play-circle)"
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.2.0"
   }
 }

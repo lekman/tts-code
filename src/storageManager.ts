@@ -16,8 +16,7 @@
  * https://github.com/lekman/tts-code
  */
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import * as vscode from "vscode";
+// import * as vscode from "vscode"; // TODO: Uncomment when implementing functionality
 
 /**
  * Manages file operations, caching, and audio export for the TTS extension.
@@ -27,6 +26,7 @@ export class StorageManager {
 	 * Creates a new StorageManager instance.
 	 * @param {import('vscode').ExtensionContext} _context - The VSCode extension context for accessing storage locations.
 	 */
+
 	constructor(private readonly _context: import("vscode").ExtensionContext) {}
 
 	/**

@@ -6,7 +6,7 @@
 
 # Class: HighlightManager
 
-Defined in: highlightManager.ts:25
+Defined in: highlightManager.ts:24
 
 Handles text highlighting and synchronization for the TTS extension.
 
@@ -16,7 +16,7 @@ Handles text highlighting and synchronization for the TTS extension.
 
 > **new HighlightManager**(): `HighlightManager`
 
-Defined in: highlightManager.ts:29
+Defined in: highlightManager.ts:32
 
 Initializes a new instance of the HighlightManager.
 
@@ -24,23 +24,53 @@ Initializes a new instance of the HighlightManager.
 
 `HighlightManager`
 
+## Properties
+
+### currentDecorations
+
+> `private` **currentDecorations**: `DecorationOptions`[] = `[]`
+
+Defined in: highlightManager.ts:25
+
+***
+
+### currentEditor?
+
+> `private` `optional` **currentEditor**: `TextEditor`
+
+Defined in: highlightManager.ts:26
+
+***
+
+### decorationType
+
+> `private` **decorationType**: `TextEditorDecorationType`
+
+Defined in: highlightManager.ts:27
+
 ## Methods
 
 ### clearHighlights()
 
-> **clearHighlights**(`_editor`): `void`
+> **clearHighlights**(): `void`
 
-Defined in: highlightManager.ts:38
+Defined in: highlightManager.ts:44
 
-Clears all highlights in the provided text editor.
+Clears all highlights in the current text editor.
 
-#### Parameters
+#### Returns
 
-##### \_editor
+`void`
 
-`TextEditor`
+***
 
-The VSCode text editor instance.
+### dispose()
+
+> **dispose**(): `void`
+
+Defined in: highlightManager.ts:55
+
+Disposes of the highlight manager and cleans up resources.
 
 #### Returns
 
@@ -50,25 +80,41 @@ The VSCode text editor instance.
 
 ### highlightRange()
 
-> **highlightRange**(`_editor`, `_range`): `void`
+> **highlightRange**(`range`): `void`
 
-Defined in: highlightManager.ts:48
+Defined in: highlightManager.ts:67
 
-Highlights a specific range in the provided text editor.
+Highlights a specific range in the current text editor.
 
 #### Parameters
 
-##### \_editor
-
-`TextEditor`
-
-The VSCode text editor instance.
-
-##### \_range
+##### range
 
 `Range`
 
 The range of text to highlight.
+
+#### Returns
+
+`void`
+
+***
+
+### setActiveEditor()
+
+> **setActiveEditor**(`editor`): `void`
+
+Defined in: highlightManager.ts:90
+
+Sets the active text editor for highlighting.
+
+#### Parameters
+
+##### editor
+
+`TextEditor`
+
+The VSCode text editor instance.
 
 #### Returns
 

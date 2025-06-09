@@ -1,15 +1,11 @@
-import path from "path";
-import { CleanWebpackPlugin } from "clean-webpack-plugin";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const path = require("path");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
 /**
- * Webpack configuration for ElevenLabs Text-to-Speech for VSCode extension (ESM format).
+ * Webpack configuration for ElevenLabs Text-to-Speech for VSCode extension.
  * Bundles the extension for VSCode's Node.js runtime.
  */
-export default {
+module.exports = {
 	target: "node",
 	mode: "production",
 	entry: "./src/extension.ts",

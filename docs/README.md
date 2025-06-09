@@ -18,3 +18,7 @@ For a detailed overview of the goals, features, technical requirements, and impl
 ## Code Documentation
 
 For detailed API and module documentation, see the [Code Documentation](./api/README.md).
+
+## Testing
+
+For our test strategy, CI checks, and manual acceptance test instructions, see the [Test Strategy](./TEST.md).

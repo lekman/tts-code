@@ -6,7 +6,9 @@
 
 ## Modules
 
+- [apiKeyManager](apiKeyManager/README.md)
 - [audioManager](audioManager/README.md)
+- [elevenLabsClient](elevenLabsClient/README.md)
 - [extension](extension/README.md)
 - [highlightManager](highlightManager/README.md)
 - [storageManager](storageManager/README.md)

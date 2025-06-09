@@ -9,3 +9,11 @@
 ## Classes
 
 - [AudioManager](classes/AudioManager.md)
+
+## Interfaces
+
+- [PlaybackEvent](interfaces/PlaybackEvent.md)
+
+## Type Aliases
+
+- [PlaybackState](type-aliases/PlaybackState.md)

@@ -58,11 +58,25 @@ The VSCode extension context for resource management.
 
 ## Methods
 
+### dispose()
+
+> **dispose**(): `void`
+
+Defined in: webviewProvider.ts:40
+
+Disposes of the webview provider and cleans up resources.
+
+#### Returns
+
+`void`
+
+***
+
 ### resolveWebviewView()
 
 > **resolveWebviewView**(`webviewView`, `_context`, `_token`): `void`
 
-Defined in: webviewProvider.ts:43
+Defined in: webviewProvider.ts:52
 
 Resolves and displays the webview view with playback controls UI.
 
@@ -100,7 +114,7 @@ Cancellation token for the resolve operation.
 
 > `private` **getHtmlForWebview**(): `string`
 
-Defined in: webviewProvider.ts:58
+Defined in: webviewProvider.ts:67
 
 Returns the HTML content for the playback controls webview.
 

@@ -16,41 +16,78 @@
  * https://github.com/lekman/tts-code
  */
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as vscode from "vscode";
 
 /**
  * Handles text highlighting and synchronization for the TTS extension.
  */
 export class HighlightManager {
+	private currentDecorations: vscode.DecorationOptions[] = [];
+	private currentEditor?: vscode.TextEditor;
+	private decorationType: vscode.TextEditorDecorationType;
+
 	/**
 	 * Initializes a new instance of the HighlightManager.
 	 */
 	constructor() {
-		// Initialize highlight manager
+		// Initialize highlight manager with yellow background decoration
+		this.decorationType = vscode.window.createTextEditorDecorationType({
+			backgroundColor: "rgba(255, 255, 0, 0.3)",
+			isWholeLine: false,
+		});
 	}
 
 	/**
-	 * Clears all highlights in the provided text editor.
-	 * @param {import('vscode').TextEditor} _editor - The VSCode text editor instance.
+	 * Clears all highlights in the current text editor.
 	 * @returns {void}
 	 */
-	/* istanbul ignore next */
-	public clearHighlights(_editor: import("vscode").TextEditor): void {
-		// Placeholder for clearing highlights
+	public clearHighlights(): void {
+		if (this.currentEditor) {
+			this.currentEditor.setDecorations(this.decorationType, []);
+			this.currentDecorations = [];
+		}
 	}
 
 	/**
-	 * Highlights a specific range in the provided text editor.
-	 * @param {import('vscode').TextEditor} _editor - The VSCode text editor instance.
-	 * @param {import('vscode').Range} _range - The range of text to highlight.
+	 * Disposes of the highlight manager and cleans up resources.
 	 * @returns {void}
 	 */
-	/* istanbul ignore next */
-	public highlightRange(
-		_editor: import("vscode").TextEditor,
-		_range: import("vscode").Range
-	): void {
-		// Placeholder for highlighting a range in the editor
+	public dispose(): void {
+		// Clear any active highlights
+		this.clearHighlights();
+		// Dispose of decoration types
+		this.decorationType.dispose();
+	}
+
+	/**
+	 * Highlights a specific range in the current text editor.
+	 * @param {vscode.Range} range - The range of text to highlight.
+	 * @returns {void}
+	 */
+	public highlightRange(range: vscode.Range): void {
+		if (!this.currentEditor) {
+			return;
+		}
+
+		this.currentDecorations = [{ range }];
+		this.currentEditor.setDecorations(
+			this.decorationType,
+			this.currentDecorations
+		);
+
+		// Ensure the highlighted text is visible
+		this.currentEditor.revealRange(
+			range,
+			vscode.TextEditorRevealType.InCenterIfOutsideViewport
+		);
+	}
+
+	/**
+	 * Sets the active text editor for highlighting.
+	 * @param {vscode.TextEditor} editor - The VSCode text editor instance.
+	 * @returns {void}
+	 */
+	public setActiveEditor(editor: vscode.TextEditor): void {
+		this.currentEditor = editor;
 	}
 }
