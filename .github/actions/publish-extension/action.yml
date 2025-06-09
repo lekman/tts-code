@@ -38,8 +38,3 @@ runs:
         GITHUB_TOKEN: ${{ inputs.token }}
         RELEASE_IDENTIFIER: ${{ inputs.tag }}
         TARGET_FOLDER: ${{ inputs.target-folder }}
-
-    - name: Report Status
-      shell: bash
-      run: |
-        echo "Published extension: ${{ inputs.tag }}" >> $GITHUB_STEP_SUMMARY

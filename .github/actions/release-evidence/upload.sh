@@ -29,7 +29,7 @@ fi
 
 # Change to the source folder
 cd "$SOURCE_FOLDER" || { echo "Failed to change directory to $SOURCE_FOLDER"; exit 1; }
-ls -l *.zip
+ls -l *.vsix
 
 # Upload each zip file in the source folder to the specified release
 for ZIP in *.zip; do

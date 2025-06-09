@@ -37,8 +37,10 @@ npx vsce package
 mkdir -p package
 mv -f *.vsix package/
 
-# Find the VSIX file
-VSIX_FILE=$(ls package/*.vsix | head -n1)
+# Find and list all VSIX files
+ls -la package/*.vsix
+# Get the most recently modified VSIX file
+VSIX_FILE=$(ls -t package/*.vsix | head -n1)
 
 if [ ! -f "$VSIX_FILE" ]; then
   echo "No VSIX file found in package/"
