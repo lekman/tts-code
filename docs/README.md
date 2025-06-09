@@ -45,3 +45,7 @@ General Usage:
 - For detailed API and module documentation, see the [Code Documentation](./api/README.md).
 
 - For our test strategy, CI checks, and manual acceptance test instructions, see the [Test Strategy](./TEST.md).
+
+## Contributors
+
+If you would like to contribute to this project, please see our [Contributing Guide](./CONTRIBUTING.md) for development setup and pull request instructions.
