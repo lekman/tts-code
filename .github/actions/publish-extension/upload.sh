@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 # Get the GitHub token from the environment variable
 TOKEN="${GITHUB_TOKEN}"
 
