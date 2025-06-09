@@ -1,0 +1,109 @@
+name: Release Please matrix
+description: "Creates a matrix of after running Release Please, to process released packages"
+
+inputs:
+  json:
+    description: "The JSON output from Release Please"
+    required: true
+  config-file:
+    description: "The release-please configuration file"
+    required: false
+    default: ".github/release-config.json"
+
+outputs:
+  matrix:
+    description: "The matrix of released projects"
+    value: ${{ steps.report.outputs.matrix }}
+  releases_created:
+    description: "true if any releases were created"
+    value: ${{ steps.report.outputs.releases_created }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare matrix
+      shell: bash
+      id: report
+      env:
+        json_string: ${{ inputs.json }}
+      run: |
+        #!/bin/bash
+
+        config="${{ inputs.config-file }}"
+
+        # Read the configuration file contents
+        config_contents=$(cat $config)
+
+        # Remove any UNICODE characters from the JSON string
+        json_string=$(echo "$json_string" | tr -d '\r' | tr -d '\n' | tr -d '\t')
+
+        json_string_no_newlines=$(echo "$json_string" | tr -d '\n')
+
+        # Prepare overall output statements of the releases
+        releases_created=$(echo "$json_string" | jq -r '.releases_created')
+        echo "releases_created=$releases_created" >> $GITHUB_OUTPUT
+
+        # Check if releases_created is true
+        if [ "$releases_created" != "true" ]; then
+          output="[]"
+        else
+          # Create JSON array of release matches as matrix for further processing
+          entries=$(echo "$json_string" | jq -c 'to_entries')
+
+          # Select entries with key ending in '--release_created' and print the result
+          selected_entries=$(echo "$entries" | jq -c 'map(select(.key | endswith("--release_created")))')
+
+          output="["
+
+          echo ""
+          echo $selected_entries
+          echo ""
+
+          current_dir=$(pwd)
+
+          # Loop through selected entries and construct the desired JSON objects
+          for entry in $(echo "$selected_entries" | jq -c '.[]'); do
+            path=$(echo "$entry" | jq -r '.key | gsub("--release_created"; "")')
+            released=$(echo "$entry" | jq -r '.value')
+            tag_key=$(echo "$entry" | jq -r '.key | gsub("--release_created"; "--tag_name")')
+            tag=$(echo "$entries" | jq -r --arg tag_key "$tag_key" '.[] | select(.key == $tag_key) | .value')
+            name=$(echo "$tag" | cut -d'@' -f1)
+            
+            # Extract the release-type from the config file
+            release_type=$(echo "$config_contents" | jq -r --arg path "$path" '.packages[$path]["release-type"] // .["release-type"]')
+
+            # Determine the language
+            cd $path        
+            if [ -f "Chart.yaml" ] || [ -f "Chart.yml" ] || [ -f "chart.yaml" ] || [ -f "chart.yml" ]; then
+                language="helm"
+            fi
+            if [ -f "Dockerfile" ]; then
+                language="docker"
+            fi
+            if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
+                language="python"
+            fi
+            if [ -f "package.json" ]; then
+                language="node"
+            fi
+            # Check if a *.kts or *.kt file exists within the folder structure
+            if [ -n "$(find . -type f -name '*.kt' -o -name '*.kts' | head -1)" ]; then
+                language="kotlin"
+            fi
+            # Check if there is a .psd1 file present
+            if [ -n "$(find . -type f -name '*.psd1' | head -1)" ]; then
+                language="powershell"
+            fi
+            
+            output+=$(jq -n --arg n "$name" --arg p "$path" --arg r "$released" --arg t "$tag" --arg rt "$release_type" --arg l "$language" '{name: $n, path: $p, released: $r, tag: $t, type: $rt, language: $l}')
+            output+=","
+
+            cd $current_dir
+          done
+
+          # Remove the trailing comma and close the JSON array
+          output="${output%,}]"
+        fi
+
+        echo "matrix=$(echo "$output" | tr -d '\n')" >> $GITHUB_OUTPUT
+        echo $output

@@ -16,17 +16,27 @@
  * https://github.com/lekman/tts-code
  */
 
+import { AudioManager } from "../src/audioManager";
+import { HighlightManager } from "../src/highlightManager";
 import { WebviewProvider } from "../src/webviewProvider";
 
 describe("WebviewProvider", () => {
 	let webviewProvider: WebviewProvider;
 	let mockContext: any;
+	let mockAudioManager: AudioManager;
+	let mockHighlightManager: HighlightManager;
 
 	beforeEach(() => {
 		mockContext = {
 			extensionUri: { fsPath: "/test/path" },
 		};
-		webviewProvider = new WebviewProvider(mockContext);
+		mockAudioManager = new AudioManager();
+		mockHighlightManager = new HighlightManager();
+		webviewProvider = new WebviewProvider(
+			mockContext,
+			mockAudioManager,
+			mockHighlightManager
+		);
 	});
 
 	it("should instantiate", () => {

@@ -64,15 +64,15 @@ This guide provides a complete framework for writing a Product Requirements Docu
 
 4. **Playback Controls**
 
-   - User Story: "As a user, I want full audio control so I can navigate content efficiently"
-   - Required Controls: Play, Pause, Skip forward (10s), Skip backward (10s)
-   - UI Location: Custom webview panel
+   - User Story: "As a user, I want audio control so I can manage playback"
+   - Required Controls: Play, Pause, Stop
+   - UI Location: Sidebar webview (using WebviewViewProvider)
 
 5. **Visual Text Highlighting**
 
    - User Story: "As a user, I want to see what's being read so I can follow along"
    - Implementation: VSCode Decoration API with synchronized highlighting
-   - Display: Separate preview window using webview
+   - Display: Highlights directly in the editor window
 
 6. **Audio Export**
 
@@ -124,8 +124,8 @@ This guide provides a complete framework for writing a Product Requirements Docu
 
 1. User opens markdown/text file
 2. Clicks speaker icon in editor title bar
-3. Extension opens preview panel with controls
-4. Audio generation begins, text highlights in sync
+3. Extension opens playback controls in sidebar
+4. Audio generation begins, text highlights in sync in the editor
 5. User controls playback as needed
 6. Optional: Save audio file
 
@@ -143,7 +143,7 @@ This guide provides a complete framework for writing a Product Requirements Docu
 1. **Extension Core** (`extension.ts`): Command registration, activation logic
 2. **Audio Manager** (`audioManager.ts`): ElevenLabs API client, audio processing
 3. **Highlight Manager** (`highlightManager.ts`): Text decoration, position tracking
-4. **Webview Provider** (`webviewProvider.ts`): UI panels, playback controls
+4. **Webview Provider** (`webviewProvider.ts`): Sidebar UI, playback controls
 5. **Storage Manager** (`storageManager.ts`): Cache, file operations
 
 **VSCode-Specific Constraints:**
@@ -234,7 +234,7 @@ const audioUri = vscode.Uri.joinPath(
 1. **Phase 1 (Weeks 1-2)**: Core infrastructure, API integration
 2. **Phase 2 (Weeks 3-4)**: Basic TTS functionality, file support
 3. **Phase 3 (Weeks 5-6)**: UI implementation, playback controls
-4. **Phase 4 (Weeks 7-8)**: Text highlighting, preview window
+4. **Phase 4 (Weeks 7-8)**: Text highlighting, editor integration
 5. **Phase 5 (Week 9)**: Audio export, polish
 6. **Phase 6 (Week 10)**: Testing, documentation, release
 

@@ -6,6 +6,8 @@ If you discover a security vulnerability in the ElevenLabs Text-to-Speech for VS
 
 ## Dependency and Vulnerability Management
 
+[![GitHub Advanced Security](https://github.com/lekman/tts-code/actions/workflows/codeql.yaml/badge.svg)](https://github.com/lekman/tts-code/actions/workflows/codeql.yaml)
+
 - We regularly test all dependencies for known vulnerabilities using `npm audit` and other automated tools.
 - GitHub Advanced Security is enabled for this repository and is integrated into our pull request and continuous integration (CI) workflows.
 - Dependency and vulnerability checks are automatically run on every pull request and on a regular schedule to detect and address issues as early as possible.

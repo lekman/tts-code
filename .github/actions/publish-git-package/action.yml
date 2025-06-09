@@ -1,0 +1,92 @@
+name: "Publish Git Package"
+description: "Checks the version and publishes the package if necessary"
+inputs:
+  token:
+    description: "Node authentication token, normally secrets.GITHUB_TOKEN"
+    required: true
+  path:
+    description: "Source directory, where the package.json file is located"
+    required: true
+outputs:
+  published:
+    description: "Whether the package was published"
+    value: ${{  steps.check-version.outputs.should_publish }}
+  current_version:
+    description: "The current version of the package"
+    value: ${{ steps.check-version.outputs.current_version }}
+  new_version:
+    description: "The new version of the package"
+    value: ${{ steps.check-version.outputs.new_version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check Version
+      id: check-version
+      run: |
+        function version { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
+
+        export NODE_PATH=$NODE_PATH:/usr/local/lib/node_modules
+
+        # Get the name and new version from package.json
+        package_name=$(node -p "require('${{ github.workspace }}/${{ inputs.path }}/package.json').name")
+        new_version=$(node -p "require('${{ github.workspace }}/${{ inputs.path }}/package.json').version")
+
+        # Check if package_name or new_version is empty
+        if [[ -z "$package_name" || -z "$new_version" ]]; then
+          echo "should_publish=false" >> $GITHUB_OUTPUT
+          echo "Skipping publish as package name or version is not found" >> $GITHUB_STEP_SUMMARY
+          exit 0
+        fi
+
+        # Get the latest, current version from npm
+        current_version=$(npm show --registry=https://npm.pkg.github.com/ --//npm.pkg.github.com/:_authToken=${{ inputs.token }} $package_name version 2>/dev/null || echo "0.0.0")
+
+        echo "Package: $package_name"
+        echo "Current Version: $current_version" >> $GITHUB_STEP_SUMMARY
+        echo "current_version=$current_version" >> $GITHUB_OUTPUT
+        echo "New Version: $new_version" >> $GITHUB_STEP_SUMMARY
+        echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+        # Check if new_version is higher than current_version, or if current_version is empty
+        if [[ -z "$current_version" || $(version $new_version) -gt $(version $current_version) ]]; then
+          echo "should_publish=true" >> $GITHUB_OUTPUT
+          echo "New version detected, package will be updated."
+        else
+          echo "should_publish=false" >> $GITHUB_OUTPUT
+          echo "No new version detected, package should not be updated." >> $GITHUB_STEP_SUMMARY
+        fi
+      shell: bash
+
+    - name: Prepare README, .npmrc and show information
+      working-directory: ${{ inputs.path }}
+      shell: bash
+      run: |
+        echo "@unified-trials:registry=https://npm.pkg.github.com/" > .npmrc
+        echo "@secnord:registry=https://npm.pkg.github.com/" >> .npmrc
+        echo "//npm.pkg.github.com/:_authToken=${{ inputs.token }}" >> .npmrc
+        if [[ -f README.md ]]; then
+          cp README.md npm.README.md
+        else
+          if [[ -f docs/README.md ]]; then
+            cp docs/README.md npm.README.md
+          fi
+        fi
+        dir=$(realpath .)
+        echo "Directory contents of $dir"
+        ls -la $dir
+
+    - name: Publish Package
+      if: steps.check-version.outputs.should_publish == 'true'
+      working-directory: ${{ inputs.path }}
+      run: |
+        echo "Publishing package..."
+        if npm publish; then
+          echo "Package published" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "Publishing package failed" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.token }}
+      shell: bash

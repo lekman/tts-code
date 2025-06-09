@@ -3,7 +3,8 @@ description: "Install dependencies, run tests, and upload results"
 inputs:
   path:
     description: "The relative path to the project directory"
-    required: true
+    required: false
+    default: "."
   name:
     description: "The name of the project"
     required: false
