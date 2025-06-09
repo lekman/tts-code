@@ -1,8 +1,8 @@
-**SecNord GRC Service + API v1.0.0**
+**SecNord GRC Service + API v1.1.0**
 
 ***
 
-# SecNord GRC Service + API v1.0.0
+# SecNord GRC Service + API v1.1.0
 
 ## Modules
 

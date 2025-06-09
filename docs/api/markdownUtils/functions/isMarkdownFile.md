@@ -1,4 +1,4 @@
-[**SecNord GRC Service + API v1.0.0**](../../README.md)
+[**SecNord GRC Service + API v1.1.0**](../../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **isMarkdownFile**(`fileName`): `boolean`
 
-Defined in: markdownUtils.ts:102
+Defined in: markdownUtils.ts:110
 
 Determines if a file is markdown based on its extension
 
