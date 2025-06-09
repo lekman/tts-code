@@ -25,45 +25,15 @@ runs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22.14
 
-    - name: Build .vsix package
-      id: build_vsix
+    - name: Build and Upload VSIX using script
       shell: bash
-      run: |
-        npm install
-        ln -s docs/LICENSE LICENSE
-        npx vsce package
-        mkdir -p package
-        mv -f *.vsix package/
-        VSIX_PATH=$(ls package/*.vsix | head -n1)
-        VSIX_NAME=$(basename "$VSIX_PATH")
-        echo "vsix_path=$VSIX_PATH" >> $GITHUB_OUTPUT
-        echo "vsix_name=$VSIX_NAME" >> $GITHUB_OUTPUT        
-
-    - name: Get release upload URL
-      id: get_release
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const release = await github.repos.getReleaseByTag({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            tag: '${{ inputs.tag }}'
-          });
-          return release.data.upload_url;
-        result-encoding: string
-        github-token: ${{ inputs.token }}
-
-    - name: Upload .vsix to GitHub Release
-      uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ steps.get_release.outputs.result }}
-        asset_path: ${{ steps.build_vsix.outputs.vsix_path }}
-        asset_name: ${{ steps.build_vsix.outputs.vsix_name }}
-        asset_content_type: application/octet-stream
+      run: .github/actions/publish-extension/upload.sh
       env:
-        GITHUB_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        RELEASE_IDENTIFIER: ${{ matrix.release.tag }}
+        TARGET_FOLDER: .
 
     - name: Report Status
       shell: bash
