@@ -80,7 +80,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare matrix
-        uses: ./.github/actions/release-please-matrix@main
+        uses: ./.github/actions/release-please-matrix
         id: report
         with:
           json: ${{ needs.release.outputs.json }}
