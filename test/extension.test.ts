@@ -93,6 +93,7 @@ describe("extension", () => {
 			skipForward: jest.fn(),
 			skipBackward: jest.fn(),
 			getCurrentAudioData: jest.fn(),
+			getCurrentDuration: jest.fn().mockReturnValue(10),
 			updatePosition: jest.fn(),
 			setWebviewProvider: jest.fn(),
 			dispose: jest.fn(),
@@ -104,6 +105,8 @@ describe("extension", () => {
 		mockHighlightManager = {
 			setActiveEditor: jest.fn(),
 			highlightRange: jest.fn(),
+			highlightAtTimestamp: jest.fn(),
+			clearHighlights: jest.fn(),
 			dispose: jest.fn(),
 		};
 		HighlightManager.mockImplementation(() => mockHighlightManager);
@@ -485,12 +488,20 @@ describe("extension", () => {
 			messageHandler({ type: "seeked", position: 42 });
 
 			expect(mockAudioManager.updatePosition).toHaveBeenCalledWith(42);
+			expect(mockHighlightManager.highlightAtTimestamp).toHaveBeenCalledWith(
+				42,
+				10
+			);
 		});
 
 		it("should handle timeUpdate message", () => {
 			messageHandler({ type: "timeUpdate", position: 42 });
 
 			expect(mockAudioManager.updatePosition).toHaveBeenCalledWith(42);
+			expect(mockHighlightManager.highlightAtTimestamp).toHaveBeenCalledWith(
+				42,
+				10
+			);
 		});
 
 		it("should ignore timeUpdate without position", () => {
@@ -516,6 +527,7 @@ describe("extension", () => {
 			messageHandler({ type: "ended" });
 
 			expect(mockAudioManager.stop).toHaveBeenCalled();
+			expect(mockHighlightManager.clearHighlights).toHaveBeenCalled();
 		});
 	});
 

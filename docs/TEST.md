@@ -2,9 +2,9 @@
 
 This document outlines the testing approach for the ElevenLabs Text-to-Speech for VSCode extension, including automated unit tests, continuous integration (CI) checks, and manual acceptance tests.
 
----
-
 ## 1. Unit Tests
+
+![codecov](https://codecov.io/gh/lekman/tts-code/graph/badge.svg?token=hDIxvefcrD)
 
 - **Scope:**
   - All core modules in `src/` (e.g., `audioManager.ts`, `highlightManager.ts`, `storageManager.ts`, `webviewProvider.ts`, `extension.ts`).
@@ -15,9 +15,9 @@ This document outlines the testing approach for the ElevenLabs Text-to-Speech fo
   - Coverage thresholds are enforced for statements, branches, functions, and lines.
   - Linting is run before tests to ensure code quality.
 
----
-
 ## 2. Continuous Integration (CI)
+
+[![Continuous Integration](https://github.com/lekman/tts-code/actions/workflows/ci.yml/badge.svg)](https://github.com/lekman/tts-code/actions/workflows/ci.yml)
 
 - **Scope:**
   - All unit tests (see above)
@@ -31,8 +31,6 @@ This document outlines the testing approach for the ElevenLabs Text-to-Speech fo
     - `npm run compile`
     - `npm run test`
   - Coverage and linting must pass for CI to succeed.
-
----
 
 ## 3. Manual Acceptance Tests
 
@@ -77,7 +75,7 @@ This document outlines the testing approach for the ElevenLabs Text-to-Speech fo
 2. Verify that a user-friendly error message is shown.
 3. Reconnect and retry to confirm normal operation resumes.
 
----
+
 
 ## 4. Additional Notes
 - All acceptance tests should be run on the latest supported version of VSCode on macOS, Windows, and Linux.

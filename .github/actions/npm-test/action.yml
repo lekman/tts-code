@@ -53,6 +53,7 @@ outputs:
   lint:
     description: "The path to the lint.json file"
     value: ${{ steps.lint.outputs.evidence }}
+
 runs:
   using: "composite"
   steps:
@@ -64,32 +65,297 @@ runs:
         cache: "npm"
         cache-dependency-path: ${{ inputs.path }}/package-lock.json
 
-    - name: Install dependencies
+    - name: Setup private NPM registries
       shell: bash
       working-directory: ${{ inputs.path }}
       run: |
-        npm install
+        echo "@secnord:registry=https://npm.pkg.github.com/" > .npmrc
+        echo "@unified-trials:registry=https://npm.pkg.github.com/" >> .npmrc
+        echo "//npm.pkg.github.com/:_authToken=${{ inputs.token }}" >> .npmrc
 
-    - name: Build
-      if: ${{ inputs.build == 'true' }}
+    - name: "Audit"
+      id: audit
+      if: ${{ inputs.audit == 'true' }}
+      working-directory: ${{ inputs.path }}
+      continue-on-error: true
+      run: |
+        npm ci --package-lock-only
+        audit_result=$(npm audit --omit=dev --json)
+        echo $audit_result > ${{ github.run_number }}-audit.json
+        echo "evidence=$(realpath ${{ github.run_number }}-audit.json)" >> $GITHUB_OUTPUT
+        if [[ $(echo $audit_result | jq -r '.metadata.vulnerabilities.moderate') != "0" || \
+              $(echo $audit_result | jq -r '.metadata.vulnerabilities.high') != "0" || \
+              $(echo $audit_result | jq -r '.metadata.vulnerabilities.critical') != "0" ]]; then
+          echo "Found vulnerabilities above 'low' severity. Stopping workflow." >> $GITHUB_STEP_SUMMARY
+          echo $audit_result | jq -r '.metadata.vulnerabilities' 
+          exit 1
+        else
+          echo "No vulnerabilities found above 'low' severity."
+        fi
+      shell: bash
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.token }}
+
+    - name: "Install dependencies"
+      if: ${{ inputs.token != '' }}
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: |
+        echo "Installing dependencies with token"
+        if ! npm install; then
+          echo "Regular install failed, retrying with --legacy-peer-deps"
+          npm install --legacy-peer-deps
+        fi
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.token }}
+
+    - name: Check for CI scripts
+      id: check-ci-scripts
+      working-directory: ${{ inputs.path }}
+      shell: bash
+      run: |
+        echo "Checking for CI scripts"
+        if [ -f package.json ]; then
+          if grep -q '"ci:setup":' package.json; then
+            echo "has-ci-setup=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-ci-setup=false" >> $GITHUB_OUTPUT
+          fi
+          if grep -q '"ci:pre":' package.json; then
+            echo "has-ci-pre=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-ci-pre=false" >> $GITHUB_OUTPUT
+          fi
+          if grep -q '"ci":' package.json; then
+            echo "has-ci=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-ci=false" >> $GITHUB_OUTPUT
+          fi
+          if grep -q '"ci:post":' package.json; then
+            echo "has-ci-post=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-ci-post=false" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "has-ci-setup=false" >> $GITHUB_OUTPUT
+          echo "has-ci-pre=false" >> $GITHUB_OUTPUT
+          echo "has-ci=false" >> $GITHUB_OUTPUT
+          echo "has-ci-post=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Install Task Runner
+      if: ${{ steps.check-ci-scripts.outputs.has-ci-setup == 'true' && inputs.skip-task-install != 'true' }}
+      shell: bash
+      run: |
+        sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Run CI Setup
+      if: ${{ steps.check-ci-scripts.outputs.has-ci-setup == 'true' }}
+      working-directory: ${{ inputs.path }}
+      shell: bash
+      run: npm run ci:setup
+
+    - name: Run CI Pre
+      if: ${{ steps.check-ci-scripts.outputs.has-ci-pre == 'true' }}
+      working-directory: ${{ inputs.path }}
+      shell: bash
+      run: npm run ci:pre
+
+    - name: Run CI Main
+      if: ${{ steps.check-ci-scripts.outputs.has-ci == 'true' }}
+      working-directory: ${{ inputs.path }}
+      shell: bash
+      run: npm run ci
+
+    - name: Run CI Post
+      if: ${{ steps.check-ci-scripts.outputs.has-ci-post == 'true' }}
+      working-directory: ${{ inputs.path }}
+      shell: bash
+      run: npm run ci:post
+
+    # Standard script pattern (fallback)
+    - name: "Build"
+      if: ${{ inputs.build == 'true' && steps.check-ci-scripts.outputs.has-ci == 'false' }}
       shell: bash
       working-directory: ${{ inputs.path }}
       run: npm run build --if-present
 
-    - name: Audit
-      if: ${{ inputs.audit == 'true' }}
+    - name: Check test arguments
+      id: check-test-arguments
+      if: ${{ steps.check-ci-scripts.outputs.has-ci == 'false' }}
       shell: bash
-      working-directory: ${{ inputs.path }}
-      run: npm audit --omit=dev
+      run: |
+        args="${{ inputs.test-arguments }}"
+        # Check if test arguments have leading and traling single quotes, then remove them
+        if [[ $args == *"'"* && $args == *"'"* ]]; then
+          args="${args:1:${#args}-2}"
+        fi
+        # Output if test arguments are set
+        if [[ -n "$args" ]]; then
+          echo "test-arguments=$args" >> $GITHUB_OUTPUT
+        else
+          echo "No test arguments"
+        fi
 
-    - name: Test
-      if: ${{ inputs.test == 'true' && inputs.coverage != 'true' }}
-      shell: bash
+    - name: Check if test script exists
+      id: check-test
+      if: ${{ steps.check-ci-scripts.outputs.has-ci == 'false' }}
       working-directory: ${{ inputs.path }}
-      run: npm run test --if-present
+      run: |
+        echo "Verifying test scripts"
+        echo "Should test: ${{ inputs.test }}"
+        if [ -f package.json ] && grep -q '"test":' package.json; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Has test script: true"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Has test script: false"
+        fi
+      shell: bash
 
-    - name: Test with Coverage
-      if: ${{ inputs.test == 'true' && inputs.coverage == 'true' }}
+    - name: Check if test:coverage script exists
+      id: check-coverage
+      if: ${{ steps.check-ci-scripts.outputs.has-ci == 'false' }}
+      working-directory: ${{ inputs.path }}
+      run: |
+        echo "Should include coverage test: ${{ inputs.test }}"
+        if [ -f package.json ] && grep -q '"test:coverage":' package.json; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Has coverage test script: true"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Has coverage test script: false"
+        fi
+      shell: bash
+
+    - name: "Lint"
+      id: lint
+      if: ${{ inputs.lint == 'true' && steps.check-ci-scripts.outputs.has-ci == 'false' }}
       shell: bash
       working-directory: ${{ inputs.path }}
-      run: npm run test:coverage --if-present 
+      run: |
+        npm run lint --if-present
+        result=$(npm run lint --if-present)
+        echo $result
+        echo $result > ${{ github.run_number }}-lint.json
+        evidence_path=$(realpath ${{ github.run_number }}-lint.json)
+        echo "evidence=$(realpath ${{ github.run_number }}-lint.json)" >> $GITHUB_OUTPUT
+
+    - name: "Test"
+      if: ${{ steps.check-test.outputs.exists == 'true' && inputs.test == 'true' && (inputs.coverage == 'false' || steps.check-coverage.outputs.exists == 'false') && steps.check-ci-scripts.outputs.has-ci == 'false' }}
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: |
+        echo "Running unit tests"
+        npm run test ${{ steps.check-test-arguments.outputs.test-arguments }}
+
+    - name: "Test with Coverage"
+      id: test-coverage
+      if: ${{ steps.check-coverage.outputs.exists == 'true' && inputs.coverage == 'true' && steps.check-ci-scripts.outputs.has-ci == 'false' }}
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: |
+        echo "Running unit tests with coverage"
+        npm run test:coverage ${{ steps.check-test-arguments.outputs.test-arguments }}
+
+    - name: Find test results
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      if: always()
+      id: test
+      run: |
+        junit_path=$(find . -path ./node_modules -prune -o -name "junit.xml" -print | head -n 1)
+        if [ -n "$junit_path" ]; then
+          echo "junit_path=$(realpath $junit_path)" >> $GITHUB_OUTPUT
+        fi
+        coverage_summary_path=$(find . -path ./node_modules -prune -o -name "coverage-summary.json" -print | head -n 1)
+        if [ -f "$coverage_summary_path" ]; then
+          echo "coverage_summary_path=$(realpath $coverage_summary_path)" >> $GITHUB_OUTPUT
+          coverage_folder=$(dirname "$coverage_summary_path")
+          echo "coverage_folder=$(realpath $coverage_folder)" >> $GITHUB_OUTPUT
+        fi
+
+    - name: "Get artifact short name"
+      id: name
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: |
+        if [[ -z "${{ inputs.name }}" ]]; then
+          component=$(basename "${{ inputs.path }}")
+        else
+          component="${{ inputs.name }}"
+        fi
+        component="${component// /-}"
+        component="${component,,}"
+        component=$(echo "$component" | tr -dc '[:alnum:]-_')
+
+        if [[ -z "$component" || "$component" == "." ]]; then
+          component="output"
+        fi
+
+        echo "value=$component" >> $GITHUB_OUTPUT
+
+    - name: "Upload audit results"
+      uses: actions/upload-artifact@v4
+      if: ${{ steps.audit.outputs.evidence != '' }}
+      continue-on-error: true
+      with:
+        name: ${{ steps.name.outputs.value }}.audit
+        retention-days: 90
+        path: ${{ steps.audit.outputs.evidence }}
+        overwrite: true
+        if-no-files-found: ignore
+
+    - name: "Upload lint results"
+      uses: actions/upload-artifact@v4
+      if: ${{ steps.lint.outputs.evidence != '' }}
+      continue-on-error: true
+      with:
+        name: ${{ steps.name.outputs.value }}.lint
+        retention-days: 90
+        path: ${{ steps.lint.outputs.evidence }}
+        overwrite: true
+        if-no-files-found: ignore
+
+    - name: Upload code coverage
+      uses: actions/upload-artifact@v4
+      if: ${{ steps.test.outputs.coverage_folder != '' }}
+      continue-on-error: true
+      with:
+        name: ${{ steps.name.outputs.value }}.coverage
+        retention-days: 90
+        path: "${{ steps.test.outputs.coverage_folder }}/coverage*.json"
+        overwrite: true
+        if-no-files-found: ignore
+
+    - name: Generate detailed test report
+      uses: dorny/test-reporter@v1
+      if: ${{ steps.test.outputs.junit_path != '' }}
+      with:
+        name: "Test Report: ${{ steps.name.outputs.value }}"
+        path: ${{ steps.test.outputs.junit_path }}
+        reporter: jest-junit
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: ${{ steps.test.outputs.junit_path != '' }}
+      continue-on-error: true
+      with:
+        name: ${{ steps.name.outputs.value }}.junit
+        retention-days: 90
+        path: "${{ steps.test.outputs.junit_path }}"
+        overwrite: true
+        if-no-files-found: ignore
+
+    - name: Report code coverage
+      uses: MishaKav/jest-coverage-comment@main
+      if: github.event_name == 'pull_request' && steps.test.outputs.coverage_summary_path != ''
+      continue-on-error: true
+      id: coverage-report
+      with:
+        coverage-summary-path: ${{ steps.test.outputs.coverage_summary_path }}
+        junitxml-title: ${{ steps.name.outputs.value }}
+        junitxml-path: ${{ steps.test.outputs.junit_path }}
+        unique-id-for-comment: ${{ inputs.path }}-test-coverage

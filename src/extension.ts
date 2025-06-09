@@ -58,15 +58,28 @@ export function activate(context: vscode.ExtensionContext) {
 			case "timeUpdate":
 				if (message.position !== undefined) {
 					audioManager.updatePosition(message.position);
+
+					// Update highlighting based on playback position
+					const duration = audioManager.getCurrentDuration();
+					if (duration > 0) {
+						highlightManager.highlightAtTimestamp(message.position, duration);
+					}
 				}
 				break;
 			case "seeked":
 				if (message.position !== undefined) {
 					audioManager.updatePosition(message.position);
+
+					// Update highlighting when user seeks
+					const duration = audioManager.getCurrentDuration();
+					if (duration > 0) {
+						highlightManager.highlightAtTimestamp(message.position, duration);
+					}
 				}
 				break;
 			case "ended":
 				audioManager.stop();
+				highlightManager.clearHighlights();
 				break;
 		}
 	});

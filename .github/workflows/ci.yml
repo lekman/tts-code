@@ -1,10 +1,18 @@
-name: CI
+name: Continuous Integration
 
 on:
   push:
     branches: ["**"]
   pull_request:
     branches: [main, master]
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+  actions: write
+  checks: write
+  security-events: write
 
 jobs:
   test:
@@ -14,14 +22,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Composite NPM Test Action
+      - name: Run checks
         uses: ./.github/actions/npm-test
         with:
           path: .
-          name: lekman-tts-code
+          name: tts-code
           token: ${{ secrets.GITHUB_TOKEN }}
-          node-version: 22.14.0
-          build: true
-          test: true
-          audit: true
           coverage: ${{ github.event_name == 'pull_request' }}
+
+      - name: Upload coverage and test results to Codecov
+        uses: ./.github/actions/coverage
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        with:
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
+          coverage_files: ${{ steps.npm-test.outputs.coverage }}
+
+      - name: Generate Software Bill of Materials
+        uses: ./.github/actions/sbom
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        with:
+          path: .
+          name: tts-code
+          token: ${{ secrets.GITHUB_TOKEN }}
