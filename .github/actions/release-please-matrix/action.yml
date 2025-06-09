@@ -75,9 +75,21 @@ runs:
                 language="powershell"
             fi
             # Try to get the tag from the JSON string for the root
-            tag=$(echo "$json_string" | jq -r 'to_entries[] | select(.key == "--tag_name") | .value')
+            tag=$(echo "$json_string" | jq -r 'to_entries[] | select(.key | endswith("--tag_name")) | .value' | head -1)
             name=$(echo "$tag" | cut -d'@' -f1)
             [ -z "$name" ] && name="tts-code"
+
+            if [ -z "$tag" ]; then
+              # Try to get version from config file
+              version=$(echo "$config_contents" | jq -r '.packages["."].version // .version // empty')
+              if [ -n "$version" ]; then
+                tag="${name}@v${version}"
+                echo "INFO: Tag not found in release-please output, constructed tag as $tag" >&2
+              else
+                echo "WARNING: No tag or version found for root project." >&2
+              fi
+            fi
+
             output=$(jq -n --arg n "$name" --arg p "$path" --arg r "true" --arg t "$tag" --arg rt "$release_type" --arg l "$language" '[{name: $n, path: $p, released: $r, tag: $t, type: $rt, language: $l}]')
             echo "matrix=$(echo "$output" | tr -d '\n')" >> $GITHUB_OUTPUT
             echo $output
