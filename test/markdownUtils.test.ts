@@ -95,6 +95,54 @@ Use \`code\` inline.`;
 			expect(result).toContain("Use code inline.");
 			expect(result).not.toContain("console.log");
 		});
+
+		it("should remove simple HTML tags", () => {
+			const markdown = "This has <strong>HTML</strong> tags";
+			const result = markdownToPlainText(markdown);
+			expect(result).toBe("This has HTML tags");
+		});
+
+		it("should handle nested HTML tags (security fix)", () => {
+			// Test case from the security vulnerability report
+			const markdown = "Test <script<script>alert('XSS')</script> content";
+			const result = markdownToPlainText(markdown);
+			// After removing nested tags, we should have no script tags
+			expect(result).not.toContain("<script>");
+			expect(result).not.toContain("</script>");
+			expect(result).not.toContain("<script<script>");
+		});
+
+		it("should handle multiple levels of nested tags", () => {
+			const markdown = "Test <<<nested>tag>> content";
+			const result = markdownToPlainText(markdown);
+			// Verify all angle brackets are removed
+			expect(result).not.toContain("<");
+			expect(result).not.toContain(">");
+		});
+
+		it("should handle overlapping HTML comments", () => {
+			// Example from security report
+			const markdown = "Test <!<!--- comment --->> content";
+			const result = markdownToPlainText(markdown);
+			// Verify no HTML comment markers remain
+			expect(result).not.toContain("<!--");
+			expect(result).not.toContain("-->");
+			expect(result).not.toContain("<!");
+		});
+
+		it("should handle malformed tags", () => {
+			const markdown = "Test <div<div>content</div</div> here";
+			const result = markdownToPlainText(markdown);
+			expect(result).toBe("Test content here");
+		});
+
+		it("should handle self-replicating patterns", () => {
+			// Ensure the fix handles patterns that could recreate themselves
+			const markdown = "Test <><><> nested <><><> tags";
+			const result = markdownToPlainText(markdown);
+			// After removing all empty tags, check spacing is normalized
+			expect(result).toBe("Test nested tags");
+		});
 	});
 
 	describe("isMarkdownFile", () => {

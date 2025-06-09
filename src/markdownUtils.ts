@@ -41,8 +41,16 @@ export function markdownToPlainText(
 		});
 	}
 
-	// Remove HTML tags
-	text = text.replace(/<[^>]*>/g, "");
+	// Remove HTML tags - apply repeatedly until no more changes occur
+	// This prevents nested tags from reappearing after initial removal
+	let previousText;
+	do {
+		previousText = text;
+		// First remove complete tags
+		text = text.replace(/<[^>]*>/g, "");
+		// Then remove any remaining angle brackets
+		text = text.replace(/[<>]/g, "");
+	} while (text !== previousText);
 
 	// Convert headers to plain text (remove # symbols)
 	text = text.replace(/^#{1,6}\s+(.+)$/gm, "$1.");
