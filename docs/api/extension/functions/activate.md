@@ -1,4 +1,4 @@
-[**SecNord GRC Service + API v0.0.1**](../../README.md)
+[**SecNord GRC Service + API v1.0.0**](../../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **activate**(`context`): `void`
 
-Defined in: extension.ts:34
+Defined in: extension.ts:37
 
 Activates the ElevenLabs Text-to-Speech extension.
 Registers the Speak Text command and initializes extension services.

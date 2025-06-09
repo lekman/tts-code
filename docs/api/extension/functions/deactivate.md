@@ -1,4 +1,4 @@
-[**SecNord GRC Service + API v0.0.1**](../../README.md)
+[**SecNord GRC Service + API v1.0.0**](../../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **deactivate**(): `void`
 
-Defined in: extension.ts:278
+Defined in: extension.ts:378
 
 Deactivates the ElevenLabs Text-to-Speech extension.
 Used for cleanup when the extension is unloaded.

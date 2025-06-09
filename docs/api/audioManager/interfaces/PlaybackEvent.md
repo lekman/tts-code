@@ -1,4 +1,4 @@
-[**SecNord GRC Service + API v0.0.1**](../../README.md)
+[**SecNord GRC Service + API v1.0.0**](../../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 # Interface: PlaybackEvent
 
-Defined in: audioManager.ts:31
+Defined in: audioManager.ts:32
 
 Playback event types
 
@@ -14,9 +14,9 @@ Playback event types
 
 ### type
 
-> **type**: `"play"` \| `"pause"` \| `"resume"` \| `"stop"` \| `"seek"`
+> **type**: `"play"` \| `"pause"` \| `"resume"` \| `"stop"` \| `"seek"` \| `"progress"` \| `"duration"`
 
-Defined in: audioManager.ts:32
+Defined in: audioManager.ts:33
 
 ***
 
@@ -24,4 +24,20 @@ Defined in: audioManager.ts:32
 
 > **position**: `number`
 
-Defined in: audioManager.ts:33
+Defined in: audioManager.ts:34
+
+***
+
+### duration?
+
+> `optional` **duration**: `number`
+
+Defined in: audioManager.ts:35
+
+***
+
+### audioData?
+
+> `optional` **audioData**: `Buffer`
+
+Defined in: audioManager.ts:36

@@ -47,6 +47,43 @@ runs:
         if [ "$releases_created" != "true" ]; then
           output="[]"
         else
+          # Check if packages section is missing or only contains "."
+          is_monorepo=$(echo "$config_contents" | jq 'if .packages == null then false elif (.packages | keys == ["."]) then false else true end')
+
+          if [ "$is_monorepo" = "false" ]; then
+            # Single-package repo (root)
+            path="."
+            release_type=$(echo "$config_contents" | jq -r '.packages["."]["release-type"] // .["release-type"]')
+            # Determine the language for the root
+            language=""
+            if [ -f "Chart.yaml" ] || [ -f "Chart.yml" ] || [ -f "chart.yaml" ] || [ -f "chart.yml" ]; then
+                language="helm"
+            fi
+            if [ -f "Dockerfile" ]; then
+                language="docker"
+            fi
+            if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
+                language="python"
+            fi
+            if [ -f "package.json" ]; then
+                language="node"
+            fi
+            if [ -n "$(find . -type f -name '*.kt' -o -name '*.kts' | head -1)" ]; then
+                language="kotlin"
+            fi
+            if [ -n "$(find . -type f -name '*.psd1' | head -1)" ]; then
+                language="powershell"
+            fi
+            # Try to get the tag from the JSON string for the root
+            tag=$(echo "$json_string" | jq -r 'to_entries[] | select(.key == "--tag_name") | .value')
+            name=$(echo "$tag" | cut -d'@' -f1)
+            [ -z "$name" ] && name="tts-code"
+            output=$(jq -n --arg n "$name" --arg p "$path" --arg r "true" --arg t "$tag" --arg rt "$release_type" --arg l "$language" '[{name: $n, path: $p, released: $r, tag: $t, type: $rt, language: $l}]')
+            echo "matrix=$(echo "$output" | tr -d '\n')" >> $GITHUB_OUTPUT
+            echo $output
+            exit 0
+          fi
+
           # Create JSON array of release matches as matrix for further processing
           entries=$(echo "$json_string" | jq -c 'to_entries')
 

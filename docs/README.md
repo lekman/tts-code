@@ -11,6 +11,75 @@ Key features include:
 - Secure API key management using VSCode SecretStorage
 - Audio export in MP3 format for offline listening
 
+## Installation
+
+### Local Installation (Without Marketplace)
+
+To install this extension locally for development or testing:
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/lekman/tts-code.git
+   cd tts-code
+   ```
+
+2. **Optional: Package the extension**
+
+    If you want include any recent changes to the extension, you can run the following commands:
+
+    Mac/Linux:
+
+   ```bash
+   npm install && ln -s docs/LICENSE LICENSE && npx vsce package && mkdir -p package && mv -f *.vsix package/
+   ```
+
+    Windows:
+
+    ```bash
+    npm install && ln -s docs/LICENSE LICENSE && npx vsce package && mkdir -p package && mv -f *.vsix package/
+    ```
+
+3. **Install in VS Code or Cursor**
+
+   **Option A: Using Command Line (Recommended)**
+   ```bash
+   # For VS Code
+   code --install-extension package/tts-code-1.0.0.vsix
+   
+   # For Cursor
+   cursor --install-extension package/tts-code-1.0.0.vsix
+   ```
+
+   **Option B: Using GUI**
+   - Open VS Code or Cursor
+   - Open the Command Palette (`Cmd+Shift+P` on macOS or `Ctrl+Shift+P` on Windows/Linux)
+   - Type "Extensions: Install from VSIX..."
+   - Select the `.vsix` file from the `package` directory
+   - Reload when prompted
+
+### Development Mode
+
+For active development with hot reload:
+
+1. **Open the project in VS Code**
+   ```bash
+   code .
+   ```
+
+2. **Run in development mode**
+   - Press `F5` or go to Run → Start Debugging
+   - This will open a new VS Code window with the extension loaded
+
+3. **Make changes and reload**
+   - Edit the source code
+   - Press `Ctrl+R` (or `Cmd+R` on macOS) in the Extension Development Host window to reload
+
+### Prerequisites
+
+- Node.js 20.x or higher
+- VS Code 1.74.0 or higher
+- An ElevenLabs API key (get one at [elevenlabs.io](https://elevenlabs.io))
+
 ## Product Requirements
 
 For a detailed overview of the goals, features, technical requirements, and implementation plan, see the [Product Requirements Document (PRD)](./PRD.md).

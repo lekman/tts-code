@@ -1,8 +1,9 @@
 {
-  "name": "@lekman/tts-code",
+  "name": "tts-code",
   "displayName": "ElevenLabs Text-to-Speech for VSCode",
   "version": "1.0.0",
   "description": "Add professional text-to-speech to VSCode with one click—featuring playback controls, text highlighting, and audio export.",
+  "publisher": "Tobias Lekman",
   "type": "commonjs",
   "engines": {
     "vscode": "^1.74.0"
@@ -20,7 +21,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "vscode:prepublish": "npm run webpack; npm run docs",
+    "vscode:prepublish": "npm run build; npm run webpack; npm run docs",
     "compile": "webpack",
     "watch": "webpack --watch",
     "package": "webpack --mode production --devtool hidden-source-map",
@@ -55,7 +56,7 @@
   "license": "GPL-3.0-or-later",
   "devDependencies": {
     "@types/node": "^20.19.0",
-    "@types/vscode": "^1.100.0",
+    "@types/vscode": "^1.74.0",
     "@typescript-eslint/eslint-plugin": "^8.33.1",
     "clean-webpack-plugin": "^4.0.0",
     "eslint": "^9.27.0",
@@ -87,7 +88,8 @@
     "commands": [
       {
         "command": "ttsCode.speakText",
-        "title": "TTS: Speak Text"
+        "title": "TTS: Speak Text",
+        "icon": "$(unmute)"
       },
       {
         "command": "ttsCode.speakSelection",
@@ -115,6 +117,13 @@
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "ttsCode.speakText",
+          "when": "resourceExtname =~ /\\.(md|txt)$/",
+          "group": "navigation"
+        }
+      ],
       "editor/context": [
         {
           "command": "ttsCode.speakSelection",
