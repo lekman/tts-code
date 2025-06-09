@@ -28,7 +28,7 @@ jobs:
           path: .
           name: tts-code
           token: ${{ secrets.GITHUB_TOKEN }}
-          coverage: ${{ github.event_name == 'pull_request' }}
+          coverage: true # ${{ github.event_name == 'pull_request' }}
 
       - name: Upload coverage and test results to Codecov
         uses: ./.github/actions/coverage
