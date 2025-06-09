@@ -1,4 +1,4 @@
-[**SecNord GRC Service + API v0.0.1**](../../README.md)
+[**SecNord GRC Service + API v1.0.0**](../../README.md)
 
 ***
 
@@ -8,6 +8,6 @@
 
 > **PlaybackState** = `"playing"` \| `"paused"` \| `"stopped"`
 
-Defined in: audioManager.ts:26
+Defined in: audioManager.ts:27
 
 Playback state for audio

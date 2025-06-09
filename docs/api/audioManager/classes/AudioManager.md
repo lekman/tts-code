@@ -1,4 +1,4 @@
-[**SecNord GRC Service + API v0.0.1**](../../README.md)
+[**SecNord GRC Service + API v1.0.0**](../../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 # Class: AudioManager
 
-Defined in: audioManager.ts:40
+Defined in: audioManager.ts:43
 
 Manages audio playback and generation for the TTS extension.
 Handles integration with ElevenLabs API and audio caching.
@@ -27,7 +27,7 @@ Handles integration with ElevenLabs API and audio caching.
 
 > `private` **audioCache**: `Map`\<`string`, `Buffer`\>
 
-Defined in: audioManager.ts:41
+Defined in: audioManager.ts:44
 
 ***
 
@@ -35,7 +35,7 @@ Defined in: audioManager.ts:41
 
 > `private` `optional` **currentAudioData**: `Buffer`
 
-Defined in: audioManager.ts:42
+Defined in: audioManager.ts:45
 
 ***
 
@@ -43,7 +43,15 @@ Defined in: audioManager.ts:42
 
 > `private` **currentCacheSize**: `number` = `0`
 
-Defined in: audioManager.ts:43
+Defined in: audioManager.ts:46
+
+***
+
+### currentDuration
+
+> `private` **currentDuration**: `number` = `0`
+
+Defined in: audioManager.ts:47
 
 ***
 
@@ -51,7 +59,7 @@ Defined in: audioManager.ts:43
 
 > `private` **currentPlaybackState**: [`PlaybackState`](../type-aliases/PlaybackState.md) = `"stopped"`
 
-Defined in: audioManager.ts:44
+Defined in: audioManager.ts:48
 
 ***
 
@@ -59,7 +67,7 @@ Defined in: audioManager.ts:44
 
 > `private` **currentPosition**: `number` = `0`
 
-Defined in: audioManager.ts:45
+Defined in: audioManager.ts:49
 
 ***
 
@@ -67,7 +75,7 @@ Defined in: audioManager.ts:45
 
 > `private` `optional` **elevenLabsClient**: [`ElevenLabsClient`](../../elevenLabsClient/classes/ElevenLabsClient.md)
 
-Defined in: audioManager.ts:46
+Defined in: audioManager.ts:50
 
 ***
 
@@ -75,7 +83,7 @@ Defined in: audioManager.ts:46
 
 > `private` **eventEmitter**: `EventEmitter`\<[`PlaybackEvent`](../interfaces/PlaybackEvent.md)\>
 
-Defined in: audioManager.ts:47
+Defined in: audioManager.ts:51
 
 ***
 
@@ -83,7 +91,15 @@ Defined in: audioManager.ts:47
 
 > `private` `readonly` **MAX\_CACHE\_SIZE**: `number`
 
-Defined in: audioManager.ts:48
+Defined in: audioManager.ts:52
+
+***
+
+### webviewProvider?
+
+> `private` `optional` **webviewProvider**: [`WebviewProvider`](../../webviewProvider/classes/WebviewProvider.md)
+
+Defined in: audioManager.ts:53
 
 ## Accessors
 
@@ -93,7 +109,7 @@ Defined in: audioManager.ts:48
 
 > **get** **onPlaybackStateChanged**(): `Event`\<[`PlaybackEvent`](../interfaces/PlaybackEvent.md)\>
 
-Defined in: audioManager.ts:186
+Defined in: audioManager.ts:199
 
 Gets the playback state changed event.
 
@@ -109,7 +125,7 @@ The event emitter.
 
 > **dispose**(): `void`
 
-Defined in: audioManager.ts:54
+Defined in: audioManager.ts:59
 
 Cleans up resources used by the AudioManager.
 
@@ -123,7 +139,7 @@ Cleans up resources used by the AudioManager.
 
 > **generateAudio**(`text`, `cacheKey`, `voiceId?`): `Promise`\<`Buffer`\>
 
-Defined in: audioManager.ts:73
+Defined in: audioManager.ts:78
 
 Generates audio from text using ElevenLabs API.
 
@@ -159,7 +175,7 @@ Promise resolving to audio data buffer.
 
 > **generateAudioChunked**(`text`, `cacheKey`, `voiceId?`, `onProgress?`): `Promise`\<`Buffer`\>
 
-Defined in: audioManager.ts:110
+Defined in: audioManager.ts:115
 
 Generates audio for large texts by chunking.
 
@@ -201,7 +217,7 @@ Promise resolving to combined audio data buffer.
 
 > **getCurrentAudioData**(): `Buffer`
 
-Defined in: audioManager.ts:153
+Defined in: audioManager.ts:158
 
 Gets the current audio data.
 
@@ -213,11 +229,27 @@ The current audio buffer or undefined.
 
 ***
 
+### getCurrentDuration()
+
+> **getCurrentDuration**(): `number`
+
+Defined in: audioManager.ts:166
+
+Gets the current audio duration.
+
+#### Returns
+
+`number`
+
+The duration in seconds.
+
+***
+
 ### getCurrentPosition()
 
 > **getCurrentPosition**(): `number`
 
-Defined in: audioManager.ts:161
+Defined in: audioManager.ts:174
 
 Gets the current playback position.
 
@@ -233,7 +265,7 @@ The current position in seconds.
 
 > **getPlaybackState**(): [`PlaybackState`](../type-aliases/PlaybackState.md)
 
-Defined in: audioManager.ts:169
+Defined in: audioManager.ts:182
 
 Gets the current playback state.
 
@@ -249,7 +281,7 @@ The current state.
 
 > **initialize**(`apiKey`): `void`
 
-Defined in: audioManager.ts:178
+Defined in: audioManager.ts:191
 
 Initializes the AudioManager with an API key.
 
@@ -271,7 +303,7 @@ The ElevenLabs API key.
 
 > **pause**(): `void`
 
-Defined in: audioManager.ts:194
+Defined in: audioManager.ts:207
 
 Pauses audio playback.
 
@@ -285,7 +317,7 @@ Pauses audio playback.
 
 > **play**(`audioData`, `startPosition`): `void`
 
-Defined in: audioManager.ts:205
+Defined in: audioManager.ts:218
 
 Plays audio starting from a specific position.
 
@@ -313,9 +345,31 @@ The position to start from in seconds.
 
 > **resume**(): `void`
 
-Defined in: audioManager.ts:216
+Defined in: audioManager.ts:246
 
 Resumes audio playback.
+
+#### Returns
+
+`void`
+
+***
+
+### setWebviewProvider()
+
+> **setWebviewProvider**(`webviewProvider`): `void`
+
+Defined in: audioManager.ts:256
+
+Sets the webview provider for audio playback.
+
+#### Parameters
+
+##### webviewProvider
+
+[`WebviewProvider`](../../webviewProvider/classes/WebviewProvider.md)
+
+The webview provider instance.
 
 #### Returns
 
@@ -327,7 +381,7 @@ Resumes audio playback.
 
 > **skipBackward**(`seconds`): `void`
 
-Defined in: audioManager.ts:226
+Defined in: audioManager.ts:265
 
 Skips backward in the audio.
 
@@ -349,7 +403,7 @@ Number of seconds to skip backward.
 
 > **skipForward**(`seconds`): `void`
 
-Defined in: audioManager.ts:236
+Defined in: audioManager.ts:275
 
 Skips forward in the audio.
 
@@ -371,9 +425,31 @@ Number of seconds to skip forward.
 
 > **stop**(): `void`
 
-Defined in: audioManager.ts:245
+Defined in: audioManager.ts:288
 
 Stops audio playback.
+
+#### Returns
+
+`void`
+
+***
+
+### updatePosition()
+
+> **updatePosition**(`position`): `void`
+
+Defined in: audioManager.ts:299
+
+Updates the playback position from the webview.
+
+#### Parameters
+
+##### position
+
+`number`
+
+The new position in seconds.
 
 #### Returns
 
@@ -385,7 +461,7 @@ Stops audio playback.
 
 > `private` **cacheAudio**(`key`, `data`): `void`
 
-Defined in: audioManager.ts:257
+Defined in: audioManager.ts:310
 
 Caches audio data with LRU eviction.
 
@@ -402,6 +478,28 @@ The cache key.
 `Buffer`
 
 The audio data to cache.
+
+#### Returns
+
+`void`
+
+***
+
+### sendAudioToWebview()
+
+> `private` **sendAudioToWebview**(`audioData`): `void`
+
+Defined in: audioManager.ts:341
+
+Sends audio data to the webview for playback.
+
+#### Parameters
+
+##### audioData
+
+`Buffer`
+
+The audio data to send.
 
 #### Returns
 

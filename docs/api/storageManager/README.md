@@ -1,4 +1,4 @@
-[**SecNord GRC Service + API v0.0.1**](../README.md)
+[**SecNord GRC Service + API v1.0.0**](../README.md)
 
 ***
 
