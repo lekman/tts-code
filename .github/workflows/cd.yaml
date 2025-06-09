@@ -159,6 +159,12 @@ jobs:
     name: "Upload Extension (VSCode)"
     runs-on: ubuntu-latest
     needs: [release-matrix]
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
+      actions: write
+      checks: write
     if: ${{ needs.release-matrix.outputs.releases_created == 'true' }}
     strategy:
       matrix:

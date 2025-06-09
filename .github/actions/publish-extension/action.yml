@@ -8,8 +8,7 @@ inputs:
     required: true
   token:
     description: "GitHub token for authentication"
-    required: false
-    default: ${{ github.token }}
+    required: true
   target-folder:
     description: "The target folder to upload the extension to"
     required: false
@@ -33,7 +32,8 @@ runs:
 
     - name: Build and Upload VSIX using script
       shell: bash
-      run: .github/actions/publish-extension/upload.sh
+      run: |
+        bash ${GITHUB_ACTION_PATH}/upload.sh
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
         RELEASE_IDENTIFIER: ${{ inputs.tag }}
