@@ -4,6 +4,10 @@
   "include-v-in-tag": true,
   "tag-separator": "@",
   "separate-pull-requests": false,
-  "release-type": "node",
-  "package-name": "tts-code"
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "tts-code"
+    }
+  }
 }
