@@ -15,79 +15,33 @@ Key features include:
 
 ### Local Installation (Without Marketplace)
 
-To install this extension locally for development or testing:
+1. **Download the latest `.vsix` file**
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/lekman/tts-code.git
-   cd tts-code
-   ```
+   Go to the [latest release page](https://github.com/lekman/tts-code/releases) and download the `.vsix` file from the "Assets" section.
 
-2. **Optional: Package the extension**
+2. **Install in VS Code or Cursor**
 
-    If you want include any recent changes to the extension, you can run the following commands:
-
-    Mac/Linux:
-
-   ```bash
-   npm install && ln -s docs/LICENSE LICENSE && npx vsce package && mkdir -p package && mv -f *.vsix package/
-   ```
-
-    Windows:
-
-    ```bash
-    npm install && ln -s docs/LICENSE LICENSE && npx vsce package && mkdir -p package && mv -f *.vsix package/
-    ```
-
-3. **Install in VS Code or Cursor**
-
-   **Option A: Using Command Line (Recommended)**
-   ```bash
-   # For VS Code
-   code --install-extension package/tts-code-1.0.0.vsix
-   
-   # For Cursor
-   cursor --install-extension package/tts-code-1.0.0.vsix
-   ```
-
-   **Option B: Using GUI**
    - Open VS Code or Cursor
    - Open the Command Palette (`Cmd+Shift+P` on macOS or `Ctrl+Shift+P` on Windows/Linux)
    - Type "Extensions: Install from VSIX..."
-   - Select the `.vsix` file from the `package` directory
-   - Reload when prompted
+   - Select the `.vsix` file you downloaded
 
-### Development Mode
+## Usage
 
-For active development with hot reload:
-
-1. **Open the project in VS Code**
-   ```bash
-   code .
-   ```
-
-2. **Run in development mode**
-   - Press `F5` or go to Run → Start Debugging
-   - This will open a new VS Code window with the extension loaded
-
-3. **Make changes and reload**
-   - Edit the source code
-   - Press `Ctrl+R` (or `Cmd+R` on macOS) in the Extension Development Host window to reload
-
-### Prerequisites
-
-- Node.js 20.x or higher
-- VS Code 1.74.0 or higher
+Prerequisites:
 - An ElevenLabs API key (get one at [elevenlabs.io](https://elevenlabs.io))
 
-## Product Requirements
+General Usage:
 
-For a detailed overview of the goals, features, technical requirements, and implementation plan, see the [Product Requirements Document (PRD)](./PRD.md).
+1. **Open a .md or .txt file**
+2. **Click the extension icon in the editor title bar** or highlight text and right click and select "TTS: Speak Text"
+3. **Add your ElevenLabs API key** if prompted
+4. **Click the play button** when the conversion is complete
 
-## Code Documentation
+## Documentation
 
-For detailed API and module documentation, see the [Code Documentation](./api/README.md).
+- For a detailed overview of the goals, features, technical requirements, and implementation plan, see the [Product Requirements Document (PRD)](./PRD.md).
 
-## Testing
+- For detailed API and module documentation, see the [Code Documentation](./api/README.md).
 
-For our test strategy, CI checks, and manual acceptance test instructions, see the [Test Strategy](./TEST.md).
+- For our test strategy, CI checks, and manual acceptance test instructions, see the [Test Strategy](./TEST.md).
