@@ -10,6 +10,10 @@ inputs:
     description: "GitHub token for authentication"
     required: false
     default: ${{ github.token }}
+  target-folder:
+    description: "The target folder to upload the extension to"
+    required: false
+    default: .
 
 outputs:
   upload_url:
@@ -31,9 +35,9 @@ runs:
       shell: bash
       run: .github/actions/publish-extension/upload.sh
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        RELEASE_IDENTIFIER: ${{ matrix.release.tag }}
-        TARGET_FOLDER: .
+        GITHUB_TOKEN: ${{ inputs.token }}
+        RELEASE_IDENTIFIER: ${{ inputs.tag }}
+        TARGET_FOLDER: ${{ inputs.target-folder }}
 
     - name: Report Status
       shell: bash
