@@ -195,6 +195,7 @@ describe("extension", () => {
 				document: {
 					languageId: "javascript",
 					getText: jest.fn().mockReturnValue("test"),
+					fileName: "test.js",
 				},
 			};
 
@@ -210,6 +211,7 @@ describe("extension", () => {
 				document: {
 					languageId: "markdown",
 					getText: jest.fn().mockReturnValue(""),
+					fileName: "test.md",
 				},
 			};
 
@@ -226,6 +228,7 @@ describe("extension", () => {
 					languageId: "markdown",
 					getText: jest.fn().mockReturnValue("# Test markdown"),
 					uri: { toString: () => "file://test.md" },
+					fileName: "test.md",
 				},
 			};
 			(vscode.window as any).activeTextEditor = mockEditor;
@@ -238,10 +241,10 @@ describe("extension", () => {
 			// Should initialize audio manager
 			expect(mockAudioManager.initialize).toHaveBeenCalledWith("test-api-key");
 
-			// Should generate audio
+			// Should generate audio with processed markdown
 			expect(mockAudioManager.generateAudio).toHaveBeenCalledWith(
-				"# Test markdown",
-				"file://test.md"
+				"Test markdown.",
+				expect.stringContaining("file://test.md_")
 			);
 
 			// Should set active editor for highlighting
@@ -264,6 +267,7 @@ describe("extension", () => {
 				document: {
 					languageId: "markdown",
 					getText: jest.fn().mockReturnValue("test"),
+					fileName: "test.md",
 				},
 			};
 
@@ -282,6 +286,7 @@ describe("extension", () => {
 					languageId: "markdown",
 					getText: jest.fn().mockReturnValue("test"),
 					uri: { toString: () => "file://test.md" },
+					fileName: "test.md",
 				},
 			};
 
@@ -313,6 +318,7 @@ describe("extension", () => {
 					languageId: "markdown",
 					getText: jest.fn().mockReturnValue("test"),
 					uri: { toString: () => "file://test.md" },
+					fileName: "test.md",
 				},
 			};
 
@@ -350,6 +356,7 @@ describe("extension", () => {
 				selection: {},
 				document: {
 					getText: jest.fn().mockReturnValue(""),
+					fileName: "test.md",
 				},
 			};
 
@@ -370,16 +377,17 @@ describe("extension", () => {
 				document: {
 					getText: jest.fn().mockReturnValue("selected text"),
 					uri: { toString: () => "file://test.md" },
+					fileName: "test.md",
 				},
 			};
 			(vscode.window as any).activeTextEditor = mockEditor;
 
 			await speakSelectionCommand.callback();
 
-			// Should generate audio for selection
+			// Should generate audio for selection with hash-based cache key
 			expect(mockAudioManager.generateAudio).toHaveBeenCalledWith(
 				"selected text",
-				"file://test.md_selection_1_0_1_10"
+				expect.stringContaining("file://test.md_selection_")
 			);
 
 			// Should highlight selection

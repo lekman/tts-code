@@ -87,7 +87,8 @@
     "commands": [
       {
         "command": "ttsCode.speakText",
-        "title": "TTS: Speak Text"
+        "title": "TTS: Speak Text",
+        "icon": "$(unmute)"
       },
       {
         "command": "ttsCode.speakSelection",
@@ -115,6 +116,13 @@
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "ttsCode.speakText",
+          "when": "resourceExtname =~ /\\.(md|txt)$/",
+          "group": "navigation"
+        }
+      ],
       "editor/context": [
         {
           "command": "ttsCode.speakSelection",

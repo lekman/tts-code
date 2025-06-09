@@ -270,6 +270,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 					const statusDiv = document.getElementById('status');
 					
 					let isLoaded = false;
+					let shouldAutoPlay = false;
 					
 					// Format time in mm:ss
 					function formatTime(seconds) {
@@ -285,6 +286,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						}
 						audioPlayer.src = '';
 						isLoaded = false;
+						shouldAutoPlay = false;
 						currentTimeSpan.textContent = '0:00';
 						durationSpan.textContent = '0:00';
 						progressBar.value = 0;
@@ -335,6 +337,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 							case 'loadAudio':
 								clearPlayer();
 								statusDiv.textContent = 'Loading audio...';
+								shouldAutoPlay = true; // Mark that we should auto-play
 								
 								try {
 									const blob = new Blob(
@@ -348,6 +351,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 									statusDiv.textContent = 'Error decoding audio';
 									console.error('Audio decode error:', err);
 									isLoaded = false;
+									shouldAutoPlay = false;
 									updateUI();
 								}
 								break;
@@ -375,17 +379,30 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 					// Audio player events
 					audioPlayer.addEventListener('loadeddata', () => {
 						isLoaded = true;
-						statusDiv.textContent = 'Playing...';
 						updateUI();
 						
-						// Auto-play when audio is loaded
-						audioPlayer.play().then(() => {
-							console.log('Auto-play started');
-							vscode.postMessage({ type: 'playing' });
-						}).catch(err => {
-							console.error('Auto-play failed:', err);
+						// Auto-play when audio is loaded and shouldAutoPlay is true
+						if (shouldAutoPlay) {
+							shouldAutoPlay = false; // Reset flag
+							statusDiv.textContent = 'Starting playback...';
+							
+							// Use setTimeout to ensure the audio element is ready
+							setTimeout(() => {
+								const playPromise = audioPlayer.play();
+								
+								if (playPromise !== undefined) {
+									playPromise.then(() => {
+										console.log('Auto-play started successfully');
+										statusDiv.textContent = 'Playing';
+									}).catch(err => {
+										console.error('Auto-play failed:', err);
+										statusDiv.textContent = 'Ready - click Play to start';
+									});
+								}
+							}, 100);
+						} else {
 							statusDiv.textContent = 'Ready - click Play to start';
-						});
+						}
 					});
 					
 					audioPlayer.addEventListener('play', () => {

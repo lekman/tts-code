@@ -16,12 +16,15 @@
  * https://github.com/lekman/tts-code
  */
 
+import * as crypto from "crypto";
+
 import * as vscode from "vscode";
 
 import { ApiKeyManager } from "./apiKeyManager";
 import { AudioManager } from "./audioManager";
 import { AuthenticationError } from "./elevenLabsClient";
 import { HighlightManager } from "./highlightManager";
+import { isMarkdownFile, markdownToPlainText } from "./markdownUtils";
 import { StorageManager } from "./storageManager";
 import { WebviewProvider } from "./webviewProvider";
 
@@ -122,6 +125,12 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
+			// Process markdown to plain text if needed
+			let processedText = text;
+			if (isMarkdownFile(document.fileName)) {
+				processedText = markdownToPlainText(text);
+			}
+
 			// Ensure we have an API key
 			const apiKey = await apiKeyManager.ensureApiKey();
 			if (!apiKey) {
@@ -147,10 +156,17 @@ export function activate(context: vscode.ExtensionContext) {
 						cancellable: false,
 					},
 					async () => {
-						// Generate audio
+						// Create a cache key that includes content hash of the processed text
+						const contentHash = crypto
+							.createHash("md5")
+							.update(processedText)
+							.digest("hex");
+						const cacheKey = `${document.uri.toString()}_${contentHash}`;
+
+						// Generate audio with processed text
 						const audioData = await audioManager.generateAudio(
-							text,
-							document.uri.toString()
+							processedText,
+							cacheKey
 						);
 
 						// Set active editor for highlighting
@@ -207,6 +223,12 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
+			// Process markdown to plain text if needed
+			let processedText = selectedText;
+			if (isMarkdownFile(editor.document.fileName)) {
+				processedText = markdownToPlainText(selectedText);
+			}
+
 			// Ensure we have an API key
 			const apiKey = await apiKeyManager.ensureApiKey();
 			if (!apiKey) {
@@ -232,11 +254,17 @@ export function activate(context: vscode.ExtensionContext) {
 						cancellable: false,
 					},
 					async () => {
-						// Generate audio for selection
-						const selectionKey = `${editor.document.uri.toString()}_selection_${selection.start.line}_${selection.start.character}_${selection.end.line}_${selection.end.character}`;
+						// Create a cache key that includes content hash of the processed text
+						const contentHash = crypto
+							.createHash("md5")
+							.update(processedText)
+							.digest("hex");
+						const cacheKey = `${editor.document.uri.toString()}_selection_${contentHash}`;
+
+						// Generate audio for selection with processed text
 						const audioData = await audioManager.generateAudio(
-							selectedText,
-							selectionKey
+							processedText,
+							cacheKey
 						);
 
 						// Set active editor for highlighting
