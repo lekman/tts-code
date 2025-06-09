@@ -14,14 +14,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Composite NPM Test Action
+      - name: Run checks
         uses: ./.github/actions/npm-test
         with:
           path: .
-          name: lekman-tts-code
+          name: tts-code
           token: ${{ secrets.GITHUB_TOKEN }}
-          node-version: 22.14.0
-          build: true
-          test: true
-          audit: true
           coverage: ${{ github.event_name == 'pull_request' }}
