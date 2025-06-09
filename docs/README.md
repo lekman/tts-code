@@ -34,9 +34,9 @@ Prerequisites:
 General Usage:
 
 1. **Open a .md or .txt file**
-2. **Click the extension icon in the editor title bar** or highlight text and right click and select "TTS: Speak Text"
+2. **Click the extension icon in the editor title bar** or highlight text, right-click and select "TTS: Speak Text"
 3. **Add your ElevenLabs API key** if prompted
-4. **Click the play button** when the conversion is complete
+4. **Use the text-to-speech user interface** when the conversion is complete to control playback
 
 ## Documentation
 
