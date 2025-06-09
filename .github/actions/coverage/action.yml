@@ -7,17 +7,9 @@ inputs:
   coverage_files:
     description: 'Comma-separated list of coverage XML files to upload'
     required: false
-  test_report_files:
-    description: 'Comma-separated list of test report XML files to upload'
-    required: false
 runs:
   using: 'composite'
   steps:
-    - name: Upload test results to Codecov
-      uses: codecov/test-results-action@v1
-      with:
-        token: ${{ inputs.codecov_token }}
-        files: ${{ inputs.test_report_files }}
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5

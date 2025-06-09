@@ -28,11 +28,19 @@ jobs:
           path: .
           name: tts-code
           token: ${{ secrets.GITHUB_TOKEN }}
-          coverage: true # ${{ github.event_name == 'pull_request' }}
+          coverage: ${{ github.event_name == 'pull_request' }}
 
       - name: Upload coverage and test results to Codecov
         uses: ./.github/actions/coverage
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         with:
           codecov_token: ${{ secrets.CODECOV_TOKEN }}
           coverage_files: ${{ steps.npm-test.outputs.coverage }}
-          test_report_files: ${{ steps.npm-test.outputs.junit }}
+
+      - name: Generate Software Bill of Materials
+        uses: ./.github/actions/sbom
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        with:
+          path: .
+          name: tts-code
+          token: ${{ secrets.GITHUB_TOKEN }}

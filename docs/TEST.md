@@ -4,6 +4,8 @@ This document outlines the testing approach for the ElevenLabs Text-to-Speech fo
 
 ## 1. Unit Tests
 
+![codecov](https://codecov.io/gh/lekman/tts-code/graph/badge.svg?token=hDIxvefcrD)
+
 - **Scope:**
   - All core modules in `src/` (e.g., `audioManager.ts`, `highlightManager.ts`, `storageManager.ts`, `webviewProvider.ts`, `extension.ts`).
   - Each exported function and class method is covered by at least one test.
@@ -12,12 +14,6 @@ This document outlines the testing approach for the ElevenLabs Text-to-Speech fo
   - All tests in the `test/` directory using Jest.
   - Coverage thresholds are enforced for statements, branches, functions, and lines.
   - Linting is run before tests to ensure code quality.
-
-### Code Coverage Report
-
-![codecov](https://codecov.io/gh/lekman/tts-code/graph/badge.svg?token=hDIxvefcrD)
-
-![Icicle Graph](https://codecov.io/gh/lekman/tts-code/graphs/icicle.svg?token=hDIxvefcrD)
 
 ## 2. Continuous Integration (CI)
 

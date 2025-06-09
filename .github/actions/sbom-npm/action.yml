@@ -1,0 +1,76 @@
+name: Software Bill of Materials (SBOM) Processor
+description: "Generates a Software Bill of Materials (SBOM) for a project."
+inputs:
+  path:
+    description: "The relative path to the project directory"
+    required: true
+  name:
+    description: "The name of the project"
+    required: false
+  token:
+    description: "NPM authentication token"
+    required: true
+outputs:
+  artifact-url:
+    description: "The URL to the SBOM artifact"
+    value: ${{ steps.upload.outputs.artifact_url }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Cache global npm modules
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-global-npm-cdxgen-1.0
+        restore-keys: |
+          ${{ runner.os }}-global-npm-
+
+    - name: "Get artifact short name"
+      id: name
+      shell: bash
+      run: |
+        if [[ -z "${{ inputs.name }}" ]]; then
+          component=$(basename "${{ inputs.path }}")
+        else
+          component="${{ inputs.name }}"
+        fi
+        component="${component// /-}"
+        component="${component,,}"
+        component=$(echo "$component" | tr -dc '[:alnum:]-_')
+
+        if [[ -z "$component" || "$component" == "." ]]; then
+          component="output"
+        fi
+
+        echo "value=$component" >> $GITHUB_OUTPUT
+
+    - name: "Create SBOM"
+      shell: bash
+      id: sbom
+      working-directory: ${{ inputs.path }}
+      run: |
+        if ! npm list -g --depth=0 | grep @cyclonedx/cdxgen; then
+            echo "Package @cyclonedx/cdxgen not found. Installing...";
+            npm install -g @cyclonedx/cdxgen;
+        fi
+        mkdir sbom
+        if [[ -f ".npmrc" ]]; then
+          cp .npmrc sbom/
+        fi
+        cp package.json sbom/
+        jq 'del(.devDependencies)' sbom/package.json > sbom/temp.json && mv sbom/temp.json sbom/package.json
+        cd sbom
+        npm i --package-lock-only
+        cdxgen -o sbom.json
+        sbom_file=$(realpath sbom.json)
+        echo "file=$sbom_file" >> $GITHUB_OUTPUT
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.token }}
+
+    - name: "Upload SBOM artifact"
+      uses: actions/upload-artifact@v4
+      id: upload
+      with:
+        name: ${{ steps.name.outputs.value }}.sbom
+        path: ${{ steps.sbom.outputs.file }}
