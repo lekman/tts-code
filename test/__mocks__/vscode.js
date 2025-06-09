@@ -28,6 +28,27 @@ module.exports = {
 		registerCommand: jest.fn(() => ({ dispose: jest.fn() })),
 		executeCommand: jest.fn().mockResolvedValue(undefined),
 	},
+	workspace: {
+		getConfiguration: jest.fn(() => ({
+			get: jest.fn(),
+			has: jest.fn(),
+			update: jest.fn(),
+		})),
+		fs: {
+			readFile: jest.fn(),
+			writeFile: jest.fn(),
+			delete: jest.fn(),
+			createDirectory: jest.fn(),
+		},
+	},
+	Uri: {
+		file: jest.fn((path) => ({ fsPath: path, toString: () => path })),
+		parse: jest.fn((str) => ({ fsPath: str, toString: () => str })),
+		joinPath: jest.fn((base, ...paths) => ({
+			fsPath: [base.fsPath || base, ...paths].join('/'),
+			toString: () => [base.fsPath || base, ...paths].join('/'),
+		})),
+	},
 	ExtensionContext: class {},
 	EventEmitter: jest.fn().mockImplementation(function() {
 		const emitter = createEventEmitter();
