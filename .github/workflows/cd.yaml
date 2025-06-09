@@ -164,6 +164,10 @@ jobs:
       matrix:
         release: ${{ fromJson(needs.release-matrix.outputs.matrix) }}
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        if: ${{ matrix.release.name == 'tts-code' }}
+
       - name: Publish VSCode Extension
         if: ${{ matrix.release.name == 'tts-code' }}
         uses: ./.github/actions/publish-extension
