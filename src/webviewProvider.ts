@@ -138,11 +138,13 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						background-color: var(--vscode-button-background);
 						color: var(--vscode-button-foreground);
 						border: none;
-						padding: 6px 14px;
+						padding: 8px 16px;
 						cursor: pointer;
 						border-radius: 2px;
+						font-size: 14px;
+						min-width: 100px;
 					}
-					button:hover {
+					button:hover:not(:disabled) {
 						background-color: var(--vscode-button-hoverBackground);
 					}
 					button:disabled {
@@ -172,19 +174,18 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 					audio {
 						display: none;
 					}
+					h3 {
+						margin-bottom: 15px;
+					}
 				</style>
 			</head>
 			<body>
-				<h3>TTS Playback Controls</h3>
+				<h3>TTS Playback</h3>
 				
 				<audio id="audioPlayer"></audio>
 				
 				<div class="controls">
-					<button id="playBtn" disabled>▶️ Play</button>
-					<button id="pauseBtn" disabled>⏸️ Pause</button>
-					<button id="stopBtn" disabled>⏹️ Stop</button>
-					<button id="skipBackBtn" disabled>⏪ -10s</button>
-					<button id="skipForwardBtn" disabled>⏩ +10s</button>
+					<button id="playPauseBtn" disabled>▶️ Play</button>
 				</div>
 				
 				<div class="progress-container">
@@ -200,11 +201,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 				<script nonce="${nonce}">
 					const vscode = acquireVsCodeApi();
 					const audioPlayer = document.getElementById('audioPlayer');
-					const playBtn = document.getElementById('playBtn');
-					const pauseBtn = document.getElementById('pauseBtn');
-					const stopBtn = document.getElementById('stopBtn');
-					const skipBackBtn = document.getElementById('skipBackBtn');
-					const skipForwardBtn = document.getElementById('skipForwardBtn');
+					const playPauseBtn = document.getElementById('playPauseBtn');
 					const progressBar = document.getElementById('progressBar');
 					const currentTimeSpan = document.getElementById('currentTime');
 					const durationSpan = document.getElementById('duration');
@@ -219,21 +216,38 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						return mins + ':' + secs.toString().padStart(2, '0');
 					}
 					
+					// Clear the player
+					function clearPlayer() {
+						if (audioPlayer.src && audioPlayer.src.startsWith('blob:')) {
+							URL.revokeObjectURL(audioPlayer.src);
+						}
+						audioPlayer.src = '';
+						isLoaded = false;
+						currentTimeSpan.textContent = '0:00';
+						durationSpan.textContent = '0:00';
+						progressBar.value = 0;
+						progressBar.disabled = true;
+						playPauseBtn.disabled = true;
+						playPauseBtn.textContent = '▶️ Play';
+						statusDiv.textContent = 'Waiting for audio...';
+					}
+					
 					// Update UI state
 					function updateUI() {
+						if (!isLoaded || !audioPlayer.src) {
+							playPauseBtn.disabled = true;
+							progressBar.disabled = true;
+							return;
+						}
+						
 						const isPaused = audioPlayer.paused;
-						const hasAudio = isLoaded && audioPlayer.src;
+						playPauseBtn.disabled = false;
+						playPauseBtn.textContent = isPaused ? '▶️ Play' : '⏸️ Pause';
+						progressBar.disabled = false;
 						
-						playBtn.disabled = !hasAudio || !isPaused;
-						pauseBtn.disabled = !hasAudio || isPaused;
-						stopBtn.disabled = !hasAudio;
-						skipBackBtn.disabled = !hasAudio;
-						skipForwardBtn.disabled = !hasAudio;
-						progressBar.disabled = !hasAudio;
-						
-						if (hasAudio) {
+						if (!isNaN(audioPlayer.duration)) {
 							currentTimeSpan.textContent = formatTime(audioPlayer.currentTime);
-							durationSpan.textContent = formatTime(audioPlayer.duration || 0);
+							durationSpan.textContent = formatTime(audioPlayer.duration);
 							progressBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100 || 0;
 						}
 					}
@@ -243,20 +257,35 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						const message = event.data;
 						
 						switch (message.type) {
+							case 'clearAudio':
+								clearPlayer();
+								break;
+								
 							case 'loadAudio':
+								clearPlayer();
 								statusDiv.textContent = 'Loading audio...';
-								const blob = new Blob(
-									[Uint8Array.from(atob(message.data), c => c.charCodeAt(0))],
-									{ type: 'audio/mpeg' }
-								);
-								const url = URL.createObjectURL(blob);
-								audioPlayer.src = url;
-								audioPlayer.load();
+								
+								try {
+									const blob = new Blob(
+										[Uint8Array.from(atob(message.data), c => c.charCodeAt(0))],
+										{ type: 'audio/mpeg' }
+									);
+									const url = URL.createObjectURL(blob);
+									audioPlayer.src = url;
+									audioPlayer.load();
+								} catch (err) {
+									statusDiv.textContent = 'Error decoding audio';
+									console.error('Audio decode error:', err);
+									isLoaded = false;
+									updateUI();
+								}
 								break;
 								
 							case 'play':
-								if (isLoaded) {
-									audioPlayer.play();
+								if (isLoaded && audioPlayer.paused) {
+									audioPlayer.play().catch(err => {
+										console.error('Play error:', err);
+									});
 								}
 								break;
 								
@@ -269,23 +298,22 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 								audioPlayer.currentTime = 0;
 								updateUI();
 								break;
-								
-							case 'seek':
-								if (message.position !== undefined) {
-									audioPlayer.currentTime = message.position;
-								}
-								break;
 						}
 					});
 					
 					// Audio player events
 					audioPlayer.addEventListener('loadeddata', () => {
 						isLoaded = true;
-						statusDiv.textContent = 'Audio loaded';
+						statusDiv.textContent = 'Playing...';
 						updateUI();
-						vscode.postMessage({ 
-							type: 'audioLoaded',
-							duration: audioPlayer.duration
+						
+						// Auto-play when audio is loaded
+						audioPlayer.play().then(() => {
+							console.log('Auto-play started');
+							vscode.postMessage({ type: 'playing' });
+						}).catch(err => {
+							console.error('Auto-play failed:', err);
+							statusDiv.textContent = 'Ready - click Play to start';
 						});
 					});
 					
@@ -296,13 +324,14 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 					});
 					
 					audioPlayer.addEventListener('pause', () => {
-						statusDiv.textContent = 'Paused';
+						statusDiv.textContent = audioPlayer.currentTime === 0 ? 'Stopped' : 'Paused';
 						updateUI();
 						vscode.postMessage({ type: 'paused' });
 					});
 					
 					audioPlayer.addEventListener('ended', () => {
 						statusDiv.textContent = 'Finished';
+						audioPlayer.currentTime = 0;
 						updateUI();
 						vscode.postMessage({ type: 'ended' });
 					});
@@ -316,42 +345,29 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 					});
 					
 					audioPlayer.addEventListener('error', (e) => {
+						isLoaded = false;
 						statusDiv.textContent = 'Error loading audio';
 						console.error('Audio error:', e);
+						updateUI();
 						vscode.postMessage({ 
 							type: 'error',
-							error: e.message
+							error: e.message || 'Unknown error'
 						});
 					});
 					
-					// Button handlers
-					playBtn.addEventListener('click', () => {
-						audioPlayer.play();
-						vscode.postMessage({ type: 'playClicked' });
+					// Play/Pause button handler
+					playPauseBtn.addEventListener('click', () => {
+						if (audioPlayer.paused) {
+							audioPlayer.play().catch(err => {
+								console.error('Play button error:', err);
+								statusDiv.textContent = 'Playback failed';
+							});
+						} else {
+							audioPlayer.pause();
+						}
 					});
 					
-					pauseBtn.addEventListener('click', () => {
-						audioPlayer.pause();
-						vscode.postMessage({ type: 'pauseClicked' });
-					});
-					
-					stopBtn.addEventListener('click', () => {
-						audioPlayer.pause();
-						audioPlayer.currentTime = 0;
-						updateUI();
-						vscode.postMessage({ type: 'stopClicked' });
-					});
-					
-					skipBackBtn.addEventListener('click', () => {
-						audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 10);
-						vscode.postMessage({ type: 'skipBackClicked' });
-					});
-					
-					skipForwardBtn.addEventListener('click', () => {
-						audioPlayer.currentTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 10);
-						vscode.postMessage({ type: 'skipForwardClicked' });
-					});
-					
+					// Progress bar handler
 					progressBar.addEventListener('input', () => {
 						const time = (progressBar.value / 100) * audioPlayer.duration;
 						audioPlayer.currentTime = time;
@@ -361,8 +377,11 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						});
 					});
 					
-					// Initial UI update
-					updateUI();
+					// Initial UI state
+					clearPlayer();
+					
+					// Send ready message
+					vscode.postMessage({ type: 'ready' });
 				</script>
 			</body>
 			</html>`;

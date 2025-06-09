@@ -17,7 +17,7 @@ module.exports = {
 		showErrorMessage: jest.fn(),
 		showWarningMessage: jest.fn(),
 		showInputBox: jest.fn(),
-		withProgress: jest.fn((options, callback) => callback()),
+		withProgress: jest.fn((options, callback) => Promise.resolve(callback())),
 		activeTextEditor: null,
 		registerWebviewViewProvider: jest.fn(() => ({ dispose: jest.fn() })),
 		createTextEditorDecorationType: jest.fn(() => ({
@@ -26,7 +26,7 @@ module.exports = {
 	},
 	commands: {
 		registerCommand: jest.fn(() => ({ dispose: jest.fn() })),
-		executeCommand: jest.fn(),
+		executeCommand: jest.fn().mockResolvedValue(undefined),
 	},
 	ExtensionContext: class {},
 	EventEmitter: jest.fn().mockImplementation(function() {
@@ -39,5 +39,11 @@ module.exports = {
 	Range: jest.fn((start, end) => ({ start, end })),
 	ProgressLocation: {
 		Notification: 10,
+	},
+	TextEditorRevealType: {
+		Default: 0,
+		InCenter: 1,
+		InCenterIfOutsideViewport: 2,
+		AtTop: 3,
 	},
 };

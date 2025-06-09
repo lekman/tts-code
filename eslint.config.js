@@ -48,6 +48,7 @@ module.exports = [
 				require: "readonly",
 				console: "readonly",
 				Buffer: "readonly",
+				setTimeout: "readonly",
 				// Browser globals (for fetch)
 				fetch: "readonly",
 				// Jest globals

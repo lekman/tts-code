@@ -48,35 +48,21 @@ export function activate(context: vscode.ExtensionContext) {
 	// Handle webview messages
 	webviewProvider.onDidReceiveMessage((message) => {
 		switch (message.type) {
-			case "playClicked":
-				if (audioManager.getCurrentAudioData()) {
-					audioManager.resume();
-				}
+			case "playing":
+				// Update audio manager state when webview starts playing
+				audioManager.resume();
 				break;
-			case "pauseClicked":
+			case "paused":
 				audioManager.pause();
-				break;
-			case "stopClicked":
-				audioManager.stop();
-				break;
-			case "skipBackClicked":
-				audioManager.skipBackward();
-				break;
-			case "skipForwardClicked":
-				audioManager.skipForward();
 				break;
 			case "timeUpdate":
 				if (message.position !== undefined) {
 					audioManager.updatePosition(message.position);
 				}
 				break;
-			case "audioLoaded":
-				if (message.duration !== undefined) {
-					// Update duration in audio manager
-					const currentAudioData = audioManager.getCurrentAudioData();
-					if (currentAudioData) {
-						audioManager.play(currentAudioData, 0);
-					}
+			case "seeked":
+				if (message.position !== undefined) {
+					audioManager.updatePosition(message.position);
 				}
 				break;
 			case "ended":
@@ -129,6 +115,14 @@ export function activate(context: vscode.ExtensionContext) {
 			audioManager.initialize(apiKey);
 
 			try {
+				// Show the webview panel first
+				await vscode.commands.executeCommand(
+					"workbench.view.extension.ttsCodeView"
+				);
+
+				// Clear any previous audio
+				webviewProvider.postMessage({ type: "clearAudio" });
+
 				await vscode.window.withProgress(
 					{
 						location: vscode.ProgressLocation.Notification,
@@ -145,17 +139,18 @@ export function activate(context: vscode.ExtensionContext) {
 						// Set active editor for highlighting
 						highlightManager.setActiveEditor(editor);
 
+						// Show success notification
+						vscode.window.showInformationMessage(
+							`Audio generated successfully`
+						);
+
+						// Add a small delay to ensure webview is ready
+						await new Promise<void>((resolve) => {
+							setTimeout(() => resolve(), 100);
+						});
+
 						// Play the audio
 						audioManager.play(audioData);
-
-						// Show the webview panel
-						await vscode.commands.executeCommand(
-							"workbench.view.extension.ttsCodeView"
-						);
-
-						vscode.window.showInformationMessage(
-							`Audio generated and loaded for playback`
-						);
 					}
 				);
 			} catch (error) {
@@ -205,6 +200,14 @@ export function activate(context: vscode.ExtensionContext) {
 			audioManager.initialize(apiKey);
 
 			try {
+				// Show the webview panel first
+				await vscode.commands.executeCommand(
+					"workbench.view.extension.ttsCodeView"
+				);
+
+				// Clear any previous audio
+				webviewProvider.postMessage({ type: "clearAudio" });
+
 				await vscode.window.withProgress(
 					{
 						location: vscode.ProgressLocation.Notification,
@@ -225,17 +228,18 @@ export function activate(context: vscode.ExtensionContext) {
 							new vscode.Range(selection.start, selection.end)
 						);
 
+						// Show success notification
+						vscode.window.showInformationMessage(
+							`Audio generated successfully for selection`
+						);
+
+						// Add a small delay to ensure webview is ready
+						await new Promise<void>((resolve) => {
+							setTimeout(() => resolve(), 100);
+						});
+
 						// Play the audio
 						audioManager.play(audioData);
-
-						// Show the webview panel
-						await vscode.commands.executeCommand(
-							"workbench.view.extension.ttsCodeView"
-						);
-
-						vscode.window.showInformationMessage(
-							`Audio generated for selection and loaded for playback`
-						);
 					}
 				);
 			} catch (error) {

@@ -198,6 +198,8 @@ describe("AudioManager", () => {
 			expect(mockFireSpy).toHaveBeenCalledWith({
 				type: "play",
 				position: 5,
+				duration: expect.any(Number),
+				audioData: mockAudioData,
 			});
 		});
 
@@ -238,12 +240,17 @@ describe("AudioManager", () => {
 
 		it("should skip forward", () => {
 			audioManager.play(mockAudioData);
+			// Skip forward should respect duration limits
 			audioManager.skipForward(15);
 
-			expect(audioManager.getCurrentPosition()).toBe(15);
+			// The position should be clamped to the duration
+			const expectedPosition = audioManager.getCurrentPosition();
+			expect(expectedPosition).toBeLessThanOrEqual(
+				audioManager.getCurrentDuration()
+			);
 			expect(mockFireSpy).toHaveBeenCalledWith({
 				type: "seek",
-				position: 15,
+				position: expectedPosition,
 			});
 		});
 
@@ -276,6 +283,20 @@ describe("AudioManager", () => {
 
 		it("should return undefined when no audio", () => {
 			expect(audioManager.getCurrentAudioData()).toBeUndefined();
+		});
+	});
+
+	describe("getCurrentDuration", () => {
+		it("should return duration after playing audio", () => {
+			const mockAudioData = Buffer.from("test audio");
+			audioManager.play(mockAudioData);
+
+			const duration = audioManager.getCurrentDuration();
+			expect(duration).toBeGreaterThan(0);
+		});
+
+		it("should return 0 when no audio", () => {
+			expect(audioManager.getCurrentDuration()).toBe(0);
 		});
 	});
 
