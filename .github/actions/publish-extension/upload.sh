@@ -35,11 +35,14 @@ npx vsce package
 mkdir -p package
 mv -f *.vsix package/
 
+echo "VSIX build and move complete"
+ls -la package/
+
 # Find the VSIX file
 VSIX_FILE=$(ls -t package/*.vsix | head -n1)
 
 if [ ! -f "$VSIX_FILE" ]; then
-  echo "No VSIX file found in package/"
+  echo "No VSIX file found in package/" >> $GITHUB_STEP_SUMMARY
   exit 1
 fi
 
