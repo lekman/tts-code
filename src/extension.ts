@@ -37,7 +37,11 @@ export function activate(context: vscode.ExtensionContext) {
 	const storageManager = new StorageManager(context);
 	const audioManager = new AudioManager();
 	const highlightManager = new HighlightManager();
-	const webviewProvider = new WebviewProvider(context);
+	const webviewProvider = new WebviewProvider(
+		context,
+		audioManager,
+		highlightManager
+	);
 
 	// Mark storageManager as used (will be used in later tasks)
 	void storageManager;

@@ -18,6 +18,9 @@
 
 import * as vscode from "vscode";
 
+import { AudioManager } from "./audioManager";
+import { HighlightManager } from "./highlightManager";
+
 /**
  * Message types for webview communication
  */
@@ -50,8 +53,14 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 	/**
 	 * Creates a new WebviewProvider instance.
 	 * @param {vscode.ExtensionContext} _context - The VSCode extension context for resource management.
+	 * @param {AudioManager} audioManager - The audio manager instance for audio operations.
+	 * @param {HighlightManager} highlightManager - The highlight manager instance for text highlighting.
 	 */
-	constructor(private readonly _context: vscode.ExtensionContext) {}
+	constructor(
+		private readonly _context: vscode.ExtensionContext,
+		private readonly audioManager: AudioManager,
+		private readonly highlightManager: HighlightManager
+	) {}
 
 	/**
 	 * Disposes of the webview provider and cleans up resources.
@@ -128,21 +137,40 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						color: var(--vscode-foreground);
 						background-color: var(--vscode-editor-background);
 					}
-					.controls {
+					.player-section {
+						margin-bottom: 20px;
+						padding-bottom: 20px;
+						border-bottom: 1px solid var(--vscode-widget-border);
+					}
+					.controls-section {
+						margin-bottom: 20px;
+					}
+					.controls-group {
 						display: flex;
 						align-items: center;
-						gap: 10px;
-						margin-bottom: 10px;
+						gap: 8px;
+						margin-bottom: 15px;
+						flex-wrap: wrap;
+					}
+					.section-title {
+						font-size: 11px;
+						font-weight: 600;
+						text-transform: uppercase;
+						color: var(--vscode-descriptionForeground);
+						margin-bottom: 8px;
+						letter-spacing: 0.5px;
 					}
 					button {
 						background-color: var(--vscode-button-background);
 						color: var(--vscode-button-foreground);
 						border: none;
-						padding: 8px 16px;
+						padding: 6px 12px;
 						cursor: pointer;
 						border-radius: 2px;
-						font-size: 14px;
-						min-width: 100px;
+						font-size: 13px;
+						display: inline-flex;
+						align-items: center;
+						gap: 4px;
 					}
 					button:hover:not(:disabled) {
 						background-color: var(--vscode-button-hoverBackground);
@@ -150,6 +178,16 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 					button:disabled {
 						opacity: 0.5;
 						cursor: not-allowed;
+					}
+					button.primary {
+						min-width: 100px;
+						justify-content: center;
+					}
+					button.secondary {
+						background-color: var(--vscode-button-secondaryBackground);
+					}
+					button.secondary:hover:not(:disabled) {
+						background-color: var(--vscode-button-secondaryHoverBackground);
 					}
 					.progress-container {
 						width: 100%;
@@ -171,6 +209,11 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						font-size: 12px;
 						color: var(--vscode-descriptionForeground);
 					}
+					.export-section {
+						margin-top: 20px;
+						padding-top: 20px;
+						border-top: 1px solid var(--vscode-widget-border);
+					}
 					audio {
 						display: none;
 					}
@@ -184,24 +227,43 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 				
 				<audio id="audioPlayer"></audio>
 				
-				<div class="controls">
-					<button id="playPauseBtn" disabled>▶️ Play</button>
+				<!-- Player Section -->
+				<div class="player-section">
+					<div class="progress-container">
+						<input type="range" id="progressBar" min="0" max="100" value="0" disabled>
+						<div class="time-display">
+							<span id="currentTime">0:00</span>
+							<span id="duration">0:00</span>
+						</div>
+					</div>
+					<div class="status" id="status">Waiting for audio...</div>
 				</div>
 				
-				<div class="progress-container">
-					<input type="range" id="progressBar" min="0" max="100" value="0" disabled>
-					<div class="time-display">
-						<span id="currentTime">0:00</span>
-						<span id="duration">0:00</span>
+				<!-- Controls Section -->
+				<div class="controls-section">
+					<div class="section-title">Playback Controls</div>
+					<div class="controls-group">
+						<button id="playPauseBtn" class="primary" disabled>▶️ Play</button>
+						<button id="stopBtn" disabled>⏹️ Stop</button>
 					</div>
 				</div>
 				
-				<div class="status" id="status">Ready</div>
+				<!-- Export Section -->
+				<div class="export-section">
+					<div class="section-title">Export Options</div>
+					<div class="controls-group">
+						<button id="exportMp3Btn" class="secondary" disabled>💾 Export MP3</button>
+						<button id="exportWavBtn" class="secondary" disabled>💾 Export WAV</button>
+					</div>
+				</div>
 				
 				<script nonce="${nonce}">
 					const vscode = acquireVsCodeApi();
 					const audioPlayer = document.getElementById('audioPlayer');
 					const playPauseBtn = document.getElementById('playPauseBtn');
+					const stopBtn = document.getElementById('stopBtn');
+					const exportMp3Btn = document.getElementById('exportMp3Btn');
+					const exportWavBtn = document.getElementById('exportWavBtn');
 					const progressBar = document.getElementById('progressBar');
 					const currentTimeSpan = document.getElementById('currentTime');
 					const durationSpan = document.getElementById('duration');
@@ -229,6 +291,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						progressBar.disabled = true;
 						playPauseBtn.disabled = true;
 						playPauseBtn.textContent = '▶️ Play';
+						stopBtn.disabled = true;
+						exportMp3Btn.disabled = true;
+						exportWavBtn.disabled = true;
 						statusDiv.textContent = 'Waiting for audio...';
 					}
 					
@@ -236,6 +301,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 					function updateUI() {
 						if (!isLoaded || !audioPlayer.src) {
 							playPauseBtn.disabled = true;
+							stopBtn.disabled = true;
+							exportMp3Btn.disabled = true;
+							exportWavBtn.disabled = true;
 							progressBar.disabled = true;
 							return;
 						}
@@ -243,6 +311,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						const isPaused = audioPlayer.paused;
 						playPauseBtn.disabled = false;
 						playPauseBtn.textContent = isPaused ? '▶️ Play' : '⏸️ Pause';
+						stopBtn.disabled = false;
+						exportMp3Btn.disabled = false;
+						exportWavBtn.disabled = false;
 						progressBar.disabled = false;
 						
 						if (!isNaN(audioPlayer.duration)) {
@@ -365,6 +436,30 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						} else {
 							audioPlayer.pause();
 						}
+					});
+					
+					// Stop button handler
+					stopBtn.addEventListener('click', () => {
+						audioPlayer.pause();
+						audioPlayer.currentTime = 0;
+						updateUI();
+						vscode.postMessage({ type: 'stopped' });
+					});
+					
+					// Export MP3 button handler
+					exportMp3Btn.addEventListener('click', () => {
+						vscode.postMessage({ 
+							type: 'export',
+							format: 'mp3'
+						});
+					});
+					
+					// Export WAV button handler
+					exportWavBtn.addEventListener('click', () => {
+						vscode.postMessage({ 
+							type: 'export',
+							format: 'wav'
+						});
 					});
 					
 					// Progress bar handler

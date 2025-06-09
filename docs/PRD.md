@@ -64,8 +64,8 @@ This guide provides a complete framework for writing a Product Requirements Docu
 
 4. **Playback Controls**
 
-   - User Story: "As a user, I want full audio control so I can navigate content efficiently"
-   - Required Controls: Play, Pause, Skip forward (10s), Skip backward (10s), Stop
+   - User Story: "As a user, I want audio control so I can manage playback"
+   - Required Controls: Play, Pause, Stop
    - UI Location: Sidebar webview (using WebviewViewProvider)
 
 5. **Visual Text Highlighting**
