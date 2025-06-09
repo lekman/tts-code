@@ -173,3 +173,5 @@ jobs:
         uses: ./.github/actions/publish-extension
         with:
           tag: ${{ matrix.release.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

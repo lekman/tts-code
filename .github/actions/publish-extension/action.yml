@@ -35,7 +35,7 @@ runs:
         VSIX_PATH=$(ls package/*.vsix | head -n1)
         VSIX_NAME=$(basename "$VSIX_PATH")
         echo "vsix_path=$VSIX_PATH" >> $GITHUB_OUTPUT
-        echo "vsix_name=$VSIX_NAME" >> $GITHUB_OUTPUT
+        echo "vsix_name=$VSIX_NAME" >> $GITHUB_OUTPUT        
 
     - name: Get release upload URL
       id: get_release
@@ -56,4 +56,9 @@ runs:
         upload_url: ${{ steps.get_release.outputs.result }}
         asset_path: ${{ steps.build_vsix.outputs.vsix_path }}
         asset_name: ${{ steps.build_vsix.outputs.vsix_name }}
-        asset_content_type: application/octet-stream 
+        asset_content_type: application/octet-stream
+
+    - name: Report Status
+      shell: bash
+      run: |
+        echo "Published extension: ${{ steps.build_vsix.outputs.vsix_name }}" >> $GITHUB_STEP_SUMMARY
