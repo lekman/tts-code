@@ -154,6 +154,7 @@
     }
   },
   "dependencies": {
-    "@elevenlabs/elevenlabs-js": "^2.2.0"
+    "@elevenlabs/elevenlabs-js": "^2.2.0",
+    "sanitize-html": "^2.17.0"
   }
 }

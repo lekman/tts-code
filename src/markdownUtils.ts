@@ -47,9 +47,9 @@ export function markdownToPlainText(
 	do {
 		previousText = text;
 		// First remove complete tags
-		text = text.replace(/<[^>]*>/g, "");
-		// Then remove any remaining angle brackets
-		text = text.replace(/[<>]/g, "");
+		// Use sanitize-html to remove unsafe HTML tags and attributes
+		const sanitizeHtml = require("sanitize-html");
+		text = sanitizeHtml(text, { allowedTags: [], allowedAttributes: {} });
 	} while (text !== previousText);
 
 	// Convert headers to plain text (remove # symbols)
