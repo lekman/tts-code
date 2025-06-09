@@ -67,8 +67,28 @@ jobs:
           output_no_newlines=$(echo "$output_json" | tr -d '\n')
           echo "json=$output_no_newlines" >> $GITHUB_OUTPUT
 
+  # release-matrix:
+  #   name: "Prepare Release Matrix"
+  #   runs-on: ubuntu-latest
+  #   needs: [release]
+  #   outputs:
+  #     releases_created: ${{ steps.report.outputs.releases_created }}
+  #     matrix: ${{ steps.report.outputs.matrix }}
+
+  #   steps:
+  #     - name: Checkout source code
+  #       uses: actions/checkout@v4
+
+  #     - name: Prepare matrix
+  #       uses: ./.github/actions/release-please-matrix
+  #       id: report
+  #       with:
+  #         json: ${{ needs.release.outputs.json }}
+
+
+  # Uncomment this job, and comment out the 'Prepare Release Matrix' job
   release-matrix:
-    name: "Prepare Release Matrix"
+    name: "Debug: Prepare Release Matrix"
     runs-on: ubuntu-latest
     needs: [release]
     outputs:
@@ -76,14 +96,17 @@ jobs:
       matrix: ${{ steps.report.outputs.matrix }}
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Prepare matrix
-        uses: ./.github/actions/release-please-matrix
+      - name: "Show outputs"
         id: report
-        with:
-          json: ${{ needs.release.outputs.json }}
+        shell: bash
+        run: |
+          json_string=$(cat <<EOF
+          [ { "name": "tts-code", "path": ".", "released": "true", "tag": "", "type": "node", "language": "node" } ]
+          EOF
+          )
+          echo "matrix=$json_string" >> $GITHUB_OUTPUT
+          echo "releases_created=true" >> $GITHUB_OUTPUT
+          echo $json_string
 
   evidence:
     runs-on: ubuntu-latest
@@ -127,31 +150,7 @@ jobs:
         if: matrix.release.type == 'node'
         uses: ./.github/actions/release-evidence
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.NPM_TOKEN }}
           branch: ${{ github.ref_name }}
           release-identifier: ${{ matrix.release.tag }}
           filter: ${{ matrix.release.name }}
-
-  publish:
-    name: "Publish Packages"
-    runs-on: ubuntu-latest
-    needs: [release-matrix]
-    if: ${{ needs.release-matrix.outputs.releases_created == 'true' }}
-    permissions:
-      contents: write
-      packages: write
-
-    strategy:
-      matrix:
-        release: ${{ fromJson(needs.release-matrix.outputs.matrix) }}
-
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Publish NPM
-        if: ${{ matrix.release.released == 'true' && matrix.release.type == 'node' }}
-        uses: ./.github/actions/publish-git-package
-        with:
-          path: "${{ matrix.release.path }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
