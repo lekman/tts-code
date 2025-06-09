@@ -1,0 +1,59 @@
+name: Publish VSCode Extension
+
+description: "Builds the .vsix package and uploads it to the GitHub release for the given tag."
+
+inputs:
+  tag:
+    description: "The release tag to use for the upload (e.g., tts-code@v1.1.0)"
+    required: true
+
+outputs:
+  upload_url:
+    description: "The upload URL used for the release asset."
+    value: ${{ steps.get_release.outputs.result }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Build .vsix package
+      id: build_vsix
+      shell: bash
+      run: |
+        npm install
+        ln -s docs/LICENSE LICENSE
+        npx vsce package
+        mkdir -p package
+        mv -f *.vsix package/
+        VSIX_PATH=$(ls package/*.vsix | head -n1)
+        VSIX_NAME=$(basename "$VSIX_PATH")
+        echo "vsix_path=$VSIX_PATH" >> $GITHUB_OUTPUT
+        echo "vsix_name=$VSIX_NAME" >> $GITHUB_OUTPUT
+
+    - name: Get release upload URL
+      id: get_release
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const release = await github.repos.getReleaseByTag({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag: '${{ inputs.tag }}'
+          });
+          return release.data.upload_url;
+        result-encoding: string
+
+    - name: Upload .vsix to GitHub Release
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.get_release.outputs.result }}
+        asset_path: ${{ steps.build_vsix.outputs.vsix_path }}
+        asset_name: ${{ steps.build_vsix.outputs.vsix_name }}
+        asset_content_type: application/octet-stream 
