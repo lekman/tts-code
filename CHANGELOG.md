@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/lekman/tts-code/compare/tts-code@v1.0.0...tts-code@v1.1.0) (2025-06-09)
+
+
+### Features
+
+* enhance TTS functionality and UI improvements ([38c9cb6](https://github.com/lekman/tts-code/commit/38c9cb66d3679f4c013118b282364f4d3829c9c4))
+
 ## 1.0.0 (2025-06-09)
 
 
