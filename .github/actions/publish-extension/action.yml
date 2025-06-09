@@ -38,4 +38,4 @@ runs:
     - name: Report Status
       shell: bash
       run: |
-        echo "Published extension: ${{ steps.build_vsix.outputs.vsix_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "Published extension: ${{ inputs.tag }}" >> $GITHUB_STEP_SUMMARY
