@@ -138,7 +138,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Generate Software Bill of Materials (SBOM) for Node
+      - name: "Generate Software Bill of Materials (SBOM) for Node"
         if: matrix.release.type == 'node'
         uses: ./.github/actions/sbom-npm
         with:
@@ -146,7 +146,7 @@ jobs:
           path: ${{ matrix.release.path }}
           token: ${{ secrets.NPM_TOKEN }}
 
-      - name: Upload release evidence for Node
+      - name: "Upload Evidence for Node"
         if: matrix.release.type == 'node'
         uses: ./.github/actions/release-evidence
         with:
@@ -156,7 +156,7 @@ jobs:
           filter: ${{ matrix.release.name }}
 
   upload-vsix:
-    name: "Upload Extension"
+    name: "Upload Extension (VSCode)"
     runs-on: ubuntu-latest
     needs: [release-matrix]
     if: ${{ needs.release-matrix.outputs.releases_created == 'true' }}
@@ -164,44 +164,8 @@ jobs:
       matrix:
         release: ${{ fromJson(needs.release-matrix.outputs.matrix) }}
     steps:
-      - name: Checkout source code
+      - name: Publish VSCode Extension
         if: ${{ matrix.release.name == 'tts-code' }}
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        if: ${{ matrix.release.name == 'tts-code' }}
-        uses: actions/setup-node@v4
+        uses: ./.github/actions/publish-extension
         with:
-          node-version: 20
-
-      - name: Build .vsix package
-        if: ${{ matrix.release.name == 'tts-code' }}
-        run: |
-          npm install
-          ln -s docs/LICENSE LICENSE
-          npx vsce package
-          mkdir -p package
-          mv -f *.vsix package/
-
-      - name: Get release upload URL
-        if: ${{ matrix.release.name == 'tts-code' }}
-        id: get_release
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const release = await github.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: '${{ matrix.release.tag }}'
-            });
-            return release.data.upload_url;
-          result-encoding: string
-
-      - name: Upload .vsix to GitHub Release
-        if: ${{ matrix.release.name == 'tts-code' }}
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.get_release.outputs.result }}
-          asset_path: package/*.vsix
-          asset_name: tts-code.vsix
-          asset_content_type: application/zip
+          tag: ${{ matrix.release.tag }}
