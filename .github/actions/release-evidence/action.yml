@@ -1,0 +1,51 @@
+name: "Release Evidence"
+description: "Downloads artifacts and uploads them to a GitHub release."
+
+inputs:
+  token:
+    description: "GitHub token for authentication"
+    required: true
+  branch:
+    description: "Target branch for evidence gathering"
+    required: true
+    default: "main"
+  release-identifier:
+    description: "Release identifier to attach evidence to"
+    required: true
+  filter:
+    description: "Filter for files to download"
+    required: false
+    default: ""
+
+outputs:
+  output-folder:
+    description: "The folder where the artifacts are stored"
+    value: ${{ env.OUTPUT_FOLDER }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate random output folder name
+      shell: bash
+      id: generate-folder
+      run: echo "OUTPUT_FOLDER=artifacts-$(date +%s)" >> $GITHUB_ENV
+
+    - name: Download artifacts
+      run: |
+        bash ${GITHUB_ACTION_PATH}/evidence.sh
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        GITHUB_BRANCH: ${{ inputs.branch }}
+        OUTPUT_FOLDER: ${{ env.OUTPUT_FOLDER }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        FILTER: ${{ inputs.filter }}
+
+    - name: Upload artifacts to release
+      run: |
+        bash ${GITHUB_ACTION_PATH}/upload.sh
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        SOURCE_FOLDER: ${{ env.OUTPUT_FOLDER }}
+        RELEASE_IDENTIFIER: ${{ inputs['release-identifier'] }}

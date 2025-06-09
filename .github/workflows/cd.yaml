@@ -1,0 +1,157 @@
+name: "Continuous Deployment"
+
+# This workflow automates the build, package and release process for the project.
+#  It uses the release-please-action to create a release PR and then runs a series 
+#  of steps to build and test the code, publish the package to the package registry, 
+#  and upload artifacts to the release.
+#
+#  The workflow is triggered by a push to the default branch (after merge) 
+#  or manually via the workflow_dispatch event.
+
+on:
+  workflow_call:
+    outputs:
+      releases_created:
+        description: "Whether releases were created"
+        value: ${{ jobs.release-matrix.outputs.releases_created || 'false' }}
+      matrix:
+        description: "The release matrix"
+        value: ${{ jobs.release-matrix.outputs.matrix || '[]' }}
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+  actions: write
+  checks: write
+
+jobs:
+  release:
+    name: "Release Please"
+    runs-on: ubuntu-latest
+    # Only on default branch
+    if: ${{ github.ref == 'refs/heads/main' }}
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
+      actions: write
+      checks: write
+    outputs:
+      json: ${{ steps.show-outputs.outputs.json }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: "Release Please"
+        uses: googleapis/release-please-action@v4
+        if: github.ref == 'refs/heads/main'
+        id: release
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          target-branch: ${{ github.ref_name}}
+          config-file: .github/release-config.json
+          manifest-file: .github/release-manifest.json
+
+      - name: Show the outputs
+        if: github.ref == 'refs/heads/main'
+        id: show-outputs
+        run: |
+          output_json=$(echo '${{ toJson(steps.release.outputs) }}' | jq .)
+          echo $output_json
+          output_no_newlines=$(echo "$output_json" | tr -d '\n')
+          echo "json=$output_no_newlines" >> $GITHUB_OUTPUT
+
+  release-matrix:
+    name: "Prepare Release Matrix"
+    runs-on: ubuntu-latest
+    needs: [release]
+    outputs:
+      releases_created: ${{ steps.report.outputs.releases_created }}
+      matrix: ${{ steps.report.outputs.matrix }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Prepare matrix
+        uses: ./.github/actions/release-please-matrix@main
+        id: report
+        with:
+          json: ${{ needs.release.outputs.json }}
+
+  evidence:
+    runs-on: ubuntu-latest
+    needs: [release-matrix]
+    if: ${{ needs.release-matrix.outputs.releases_created == 'true' }}
+    name: "Upload Evidence"
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
+      actions: write
+      checks: write
+    strategy:
+      matrix:
+        release: ${{ fromJson(needs.release-matrix.outputs.matrix) }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: "Build Node"
+        id: run_test
+        if: matrix.release.type == 'node'
+        uses: ./.github/actions/npm-test
+        with:
+          name: ${{ matrix.release.name }}
+          token: ${{ secrets.NPM_TOKEN }}
+          path: ${{ matrix.release.path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Generate Software Bill of Materials (SBOM) for Node
+        if: matrix.release.type == 'node'
+        uses: ./.github/actions/sbom-npm
+        with:
+          name: ${{ matrix.release.name }}
+          path: ${{ matrix.release.path }}
+          token: ${{ secrets.NPM_TOKEN }}
+
+      - name: Upload release evidence for Node
+        if: matrix.release.type == 'node'
+        uses: ./.github/actions/release-evidence
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name }}
+          release-identifier: ${{ matrix.release.tag }}
+          filter: ${{ matrix.release.name }}
+
+  publish:
+    name: "Publish Packages"
+    runs-on: ubuntu-latest
+    needs: [release-matrix]
+    if: ${{ needs.release-matrix.outputs.releases_created == 'true' }}
+    permissions:
+      contents: write
+      packages: write
+
+    strategy:
+      matrix:
+        release: ${{ fromJson(needs.release-matrix.outputs.matrix) }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Publish NPM
+        if: ${{ matrix.release.released == 'true' && matrix.release.type == 'node' }}
+        uses: ./.github/actions/publish-git-package
+        with:
+          path: "${{ matrix.release.path }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
