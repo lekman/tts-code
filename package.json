@@ -13,9 +13,9 @@
     "onLanguage:plaintext"
   ],
   "categories": [
-    "Accessibility",
-    "Other"
+    "Documentation"
   ],
+  "pricing": "Free",
   "main": "./out/extension.js",
   "directories": {
     "doc": "docs"
