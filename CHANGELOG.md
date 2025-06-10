@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/lekman/tts-code/compare/tts-code@v1.3.0...tts-code@v1.3.1) (2025-06-10)
+
+
+### Bug Fixes
+
+* update package.json categories and add pricing information ([3e58f67](https://github.com/lekman/tts-code/commit/3e58f678ab2c72c84dc40aebf8e92c065f508d83))
+
 ## [1.3.0](https://github.com/lekman/tts-code/compare/tts-code@v1.2.0...tts-code@v1.3.0) (2025-06-10)
 
 
