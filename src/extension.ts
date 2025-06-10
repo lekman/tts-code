@@ -141,6 +141,16 @@ export function activate(context: vscode.ExtensionContext) {
 					return;
 				}
 
+				// Check file size (50MB limit)
+				const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+				const fileSize = Buffer.byteLength(text, "utf8");
+				if (fileSize > MAX_FILE_SIZE) {
+					vscode.window.showErrorMessage(
+						`File is too large (${(fileSize / 1024 / 1024).toFixed(2)}MB). Maximum supported size is 50MB.`
+					);
+					return;
+				}
+
 				// Process markdown to plain text if needed
 				let processedText = text;
 				if (isMarkdownFile(document.fileName)) {
@@ -175,7 +185,7 @@ export function activate(context: vscode.ExtensionContext) {
 							title: "Generating audio...",
 							cancellable: false,
 						},
-						async () => {
+						async (progress) => {
 							// Create a cache key that includes content hash of the processed text
 							const contentHash = crypto
 								.createHash("md5")
@@ -183,10 +193,17 @@ export function activate(context: vscode.ExtensionContext) {
 								.digest("hex");
 							const cacheKey = `${document.uri.toString()}_${contentHash}`;
 
-							// Generate audio with processed text
-							const audioData = await audioManager.generateAudio(
+							// Generate audio with chunking and progress reporting
+							const audioData = await audioManager.generateAudioChunked(
 								processedText,
-								cacheKey
+								cacheKey,
+								undefined, // Use default voice
+								(progressPercent, message) => {
+									progress.report({
+										increment: progressPercent,
+										message: message,
+									});
+								}
 							);
 
 							// Set active editor for highlighting
@@ -287,7 +304,7 @@ export function activate(context: vscode.ExtensionContext) {
 							title: "Generating audio for selection...",
 							cancellable: false,
 						},
-						async () => {
+						async (progress) => {
 							// Create a cache key that includes content hash of the processed text
 							const contentHash = crypto
 								.createHash("md5")
@@ -295,10 +312,17 @@ export function activate(context: vscode.ExtensionContext) {
 								.digest("hex");
 							const cacheKey = `${editor.document.uri.toString()}_selection_${contentHash}`;
 
-							// Generate audio for selection with processed text
-							const audioData = await audioManager.generateAudio(
+							// Generate audio for selection with chunking and progress
+							const audioData = await audioManager.generateAudioChunked(
 								processedText,
-								cacheKey
+								cacheKey,
+								undefined, // Use default voice
+								(progressPercent, message) => {
+									progress.report({
+										increment: progressPercent,
+										message: message,
+									});
+								}
 							);
 
 							// Set active editor for highlighting
