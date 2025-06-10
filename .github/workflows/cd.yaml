@@ -67,28 +67,8 @@ jobs:
           output_no_newlines=$(echo "$output_json" | tr -d '\n')
           echo "json=$output_no_newlines" >> $GITHUB_OUTPUT
 
-  release-matrix:
-    name: "Prepare Release Matrix"
-    runs-on: ubuntu-latest
-    needs: [release]
-    outputs:
-      releases_created: ${{ steps.report.outputs.releases_created }}
-      matrix: ${{ steps.report.outputs.matrix }}
-
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Prepare matrix
-        uses: ./.github/actions/release-please-matrix
-        id: report
-        with:
-          json: ${{ needs.release.outputs.json }}
-
-
-  # Uncomment this job, and comment out the 'Prepare Release Matrix' job
   # release-matrix:
-  #   name: "Debug: Prepare Release Matrix"
+  #   name: "Prepare Release Matrix"
   #   runs-on: ubuntu-latest
   #   needs: [release]
   #   outputs:
@@ -96,17 +76,37 @@ jobs:
   #     matrix: ${{ steps.report.outputs.matrix }}
 
   #   steps:
-  #     - name: "Show outputs"
+  #     - name: Checkout source code
+  #       uses: actions/checkout@v4
+
+  #     - name: Prepare matrix
+  #       uses: ./.github/actions/release-please-matrix
   #       id: report
-  #       shell: bash
-  #       run: |
-  #         json_string=$(cat <<EOF
-  #         [ { "name": "tts-code", "path": ".", "released": "true", "tag": "tts-code@v1.1.0", "type": "node", "language": "node" } ]
-  #         EOF
-  #         )
-  #         echo "matrix=$json_string" >> $GITHUB_OUTPUT
-  #         echo "releases_created=true" >> $GITHUB_OUTPUT
-  #         echo $json_string
+  #       with:
+  #         json: ${{ needs.release.outputs.json }}
+
+
+  # Uncomment this job, and comment out the 'Prepare Release Matrix' job
+  release-matrix:
+    name: "Debug: Prepare Release Matrix"
+    runs-on: ubuntu-latest
+    needs: [release]
+    outputs:
+      releases_created: ${{ steps.report.outputs.releases_created }}
+      matrix: ${{ steps.report.outputs.matrix }}
+
+    steps:
+      - name: "Show outputs"
+        id: report
+        shell: bash
+        run: |
+          json_string=$(cat <<EOF
+          [ { "name": "tts-code", "path": ".", "released": "true", "tag": "tts-code@v1.2.0", "type": "node", "language": "node" } ]
+          EOF
+          )
+          echo "matrix=$json_string" >> $GITHUB_OUTPUT
+          echo "releases_created=true" >> $GITHUB_OUTPUT
+          echo $json_string
 
   evidence:
     runs-on: ubuntu-latest
