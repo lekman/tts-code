@@ -137,14 +137,29 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						color: var(--vscode-foreground);
 						background-color: var(--vscode-editor-background);
 					}
+					
+					/* Focus styles for keyboard navigation */
+					*:focus {
+						outline: 2px solid var(--vscode-focusBorder);
+						outline-offset: 2px;
+					}
+					
+					.player-container {
+						display: flex;
+						flex-direction: column;
+						gap: 15px;
+					}
+					
 					.player-section {
 						margin-bottom: 20px;
 						padding-bottom: 20px;
 						border-bottom: 1px solid var(--vscode-widget-border);
 					}
+					
 					.controls-section {
 						margin-bottom: 20px;
 					}
+					
 					.controls-group {
 						display: flex;
 						align-items: center;
@@ -152,6 +167,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						margin-bottom: 15px;
 						flex-wrap: wrap;
 					}
+					
 					.section-title {
 						font-size: 11px;
 						font-weight: 600;
@@ -160,6 +176,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						margin-bottom: 8px;
 						letter-spacing: 0.5px;
 					}
+					
 					button {
 						background-color: var(--vscode-button-background);
 						color: var(--vscode-button-foreground);
@@ -172,88 +189,207 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						align-items: center;
 						gap: 4px;
 					}
+					
 					button:hover:not(:disabled) {
 						background-color: var(--vscode-button-hoverBackground);
 					}
+					
 					button:disabled {
 						opacity: 0.5;
 						cursor: not-allowed;
 					}
+					
 					button.primary {
 						min-width: 100px;
 						justify-content: center;
 					}
+					
 					button.secondary {
 						background-color: var(--vscode-button-secondaryBackground);
+						color: var(--vscode-button-secondaryForeground);
 					}
+					
 					button.secondary:hover:not(:disabled) {
 						background-color: var(--vscode-button-secondaryHoverBackground);
 					}
+					
 					.progress-container {
 						width: 100%;
 						margin: 10px 0;
+						position: relative;
 					}
+					
 					#progressBar {
 						width: 100%;
 						height: 5px;
 						cursor: pointer;
 					}
+					
 					.time-display {
 						display: flex;
 						justify-content: space-between;
 						font-size: 12px;
 						color: var(--vscode-descriptionForeground);
+						margin-top: 5px;
 					}
+					
 					.status {
 						margin-top: 10px;
 						font-size: 12px;
 						color: var(--vscode-descriptionForeground);
 					}
+					
 					.export-section {
 						margin-top: 20px;
 						padding-top: 20px;
 						border-top: 1px solid var(--vscode-widget-border);
 					}
+					
 					audio {
 						display: none;
 					}
-					h3 {
+					
+					h1 {
+						font-size: 1.2em;
 						margin-bottom: 15px;
+					}
+					
+					/* High contrast theme support */
+					@media (prefers-contrast: high) {
+						button {
+							border: 1px solid var(--vscode-button-foreground);
+						}
+						
+						.progress-container {
+							border: 1px solid var(--vscode-foreground);
+						}
+						
+						#progressBar {
+							border: 1px solid var(--vscode-foreground);
+						}
+					}
+					
+					/* Additional high contrast support using VS Code's forced colors */
+					@media (forced-colors: active) {
+						button {
+							border: 1px solid ButtonText;
+						}
+						
+						.progress-container {
+							border: 1px solid ButtonText;
+						}
+						
+						#progressBar {
+							forced-color-adjust: none;
+							accent-color: Highlight;
+						}
+					}
+					
+					/* Skip link for screen readers */
+					.skip-link {
+						position: absolute;
+						left: -9999px;
+						top: 0;
+						z-index: 999;
+					}
+					
+					.skip-link:focus {
+						left: 10px;
+						top: 10px;
+						background: var(--vscode-button-background);
+						color: var(--vscode-button-foreground);
+						padding: 8px;
+						text-decoration: none;
+						border-radius: 2px;
 					}
 				</style>
 			</head>
 			<body>
-				<h3>TTS Playback</h3>
+				<a href="#main-controls" class="skip-link">Skip to main controls</a>
 				
-				<audio id="audioPlayer"></audio>
-				
-				<!-- Player Section -->
-				<div class="player-section">
-					<div class="progress-container">
-						<input type="range" id="progressBar" min="0" max="100" value="0" disabled>
-						<div class="time-display">
-							<span id="currentTime">0:00</span>
-							<span id="duration">0:00</span>
+				<div class="player-container" role="application" aria-label="Text-to-Speech Player">
+					<h1 id="title" tabindex="-1">Text-to-Speech Player</h1>
+					
+					<audio id="audioPlayer" aria-label="Audio player"></audio>
+					
+					<!-- Player Section -->
+					<div class="player-section">
+						<div class="progress-container" 
+						     role="slider" 
+						     aria-label="Playback progress" 
+						     aria-valuemin="0" 
+						     aria-valuemax="100" 
+						     aria-valuenow="0"
+						     aria-valuetext="0 seconds of 0 seconds">
+							<input type="range" 
+							       id="progressBar" 
+							       min="0" 
+							       max="100" 
+							       value="0" 
+							       disabled
+							       aria-label="Seek slider"
+							       tabindex="0">
+							<div class="time-display">
+								<span id="currentTime" aria-label="Current time">0:00</span>
+								<span id="duration" aria-label="Total duration">0:00</span>
+							</div>
+						</div>
+						<div class="status" id="status" role="status" aria-live="polite" aria-atomic="true">
+							Waiting for audio...
 						</div>
 					</div>
-					<div class="status" id="status">Waiting for audio...</div>
-				</div>
-				
-				<!-- Controls Section -->
-				<div class="controls-section">
-					<div class="section-title">Playback Controls</div>
-					<div class="controls-group">
-						<button id="playPauseBtn" class="primary" disabled>▶️ Play</button>
-						<button id="stopBtn" disabled>⏹️ Stop</button>
+					
+					<!-- Controls Section -->
+					<div class="controls-section" id="main-controls">
+						<div class="section-title" id="playback-controls-label">Playback Controls</div>
+						<div class="controls-group" role="toolbar" aria-labelledby="playback-controls-label">
+							<button id="playPauseBtn" 
+							        class="primary" 
+							        disabled 
+							        aria-label="Play"
+							        tabindex="0">
+								<span aria-hidden="true">▶️</span> Play
+							</button>
+							<button id="stopBtn" 
+							        disabled 
+							        aria-label="Stop playback"
+							        tabindex="0">
+								<span aria-hidden="true">⏹️</span> Stop
+							</button>
+							<button id="skipBackBtn" 
+							        disabled 
+							        aria-label="Skip backward 10 seconds"
+							        tabindex="0">
+								<span aria-hidden="true">⏪</span> -10s
+							</button>
+							<button id="skipForwardBtn" 
+							        disabled 
+							        aria-label="Skip forward 10 seconds"
+							        tabindex="0">
+								<span aria-hidden="true">⏩</span> +10s
+							</button>
+						</div>
 					</div>
-				</div>
-				
-				<!-- Export Section -->
-				<div class="export-section">
-					<div class="section-title">Export Options</div>
-					<div class="controls-group">
-						<button id="exportMp3Btn" class="secondary" disabled>💾 Export MP3</button>
-						<button id="exportWavBtn" class="secondary" disabled>💾 Export WAV</button>
+					
+					<!-- Export Section -->
+					<div class="export-section">
+						<div class="section-title" id="export-options-label">Export Options</div>
+						<div class="controls-group" role="toolbar" aria-labelledby="export-options-label">
+							<button id="exportMp3Btn" 
+							        class="secondary" 
+							        disabled 
+							        aria-label="Export as MP3 file"
+							        tabindex="0">
+								<span aria-hidden="true">💾</span> Export MP3
+							</button>
+							<button id="exportWavBtn" 
+							        class="secondary" 
+							        disabled 
+							        aria-label="Export as WAV file"
+							        tabindex="0">
+								<span aria-hidden="true">💾</span> Export WAV
+							</button>
+						</div>
 					</div>
 				</div>
 				
@@ -262,9 +398,12 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 					const audioPlayer = document.getElementById('audioPlayer');
 					const playPauseBtn = document.getElementById('playPauseBtn');
 					const stopBtn = document.getElementById('stopBtn');
+					const skipBackBtn = document.getElementById('skipBackBtn');
+					const skipForwardBtn = document.getElementById('skipForwardBtn');
 					const exportMp3Btn = document.getElementById('exportMp3Btn');
 					const exportWavBtn = document.getElementById('exportWavBtn');
 					const progressBar = document.getElementById('progressBar');
+					const progressContainer = document.querySelector('.progress-container');
 					const currentTimeSpan = document.getElementById('currentTime');
 					const durationSpan = document.getElementById('duration');
 					const statusDiv = document.getElementById('status');
@@ -277,6 +416,29 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						const mins = Math.floor(seconds / 60);
 						const secs = Math.floor(seconds % 60);
 						return mins + ':' + secs.toString().padStart(2, '0');
+					}
+					
+					// Update ARIA attributes for progress
+					function updateProgressAria() {
+						if (!isNaN(audioPlayer.duration) && audioPlayer.duration > 0) {
+							const percent = Math.round((audioPlayer.currentTime / audioPlayer.duration) * 100);
+							const currentFormatted = formatTime(audioPlayer.currentTime);
+							const durationFormatted = formatTime(audioPlayer.duration);
+							
+							progressContainer.setAttribute('aria-valuenow', percent);
+							progressContainer.setAttribute('aria-valuetext', 
+								currentFormatted + ' of ' + durationFormatted);
+						}
+					}
+					
+					// Announce status to screen readers
+					function announceStatus(message) {
+						statusDiv.textContent = message;
+						// Force screen reader to announce by toggling aria-live
+						statusDiv.setAttribute('aria-live', 'off');
+						setTimeout(() => {
+							statusDiv.setAttribute('aria-live', 'polite');
+						}, 100);
 					}
 					
 					// Clear the player
@@ -293,10 +455,14 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						progressBar.disabled = true;
 						playPauseBtn.disabled = true;
 						playPauseBtn.textContent = '▶️ Play';
+						playPauseBtn.setAttribute('aria-label', 'Play');
 						stopBtn.disabled = true;
+						skipBackBtn.disabled = true;
+						skipForwardBtn.disabled = true;
 						exportMp3Btn.disabled = true;
 						exportWavBtn.disabled = true;
-						statusDiv.textContent = 'Waiting for audio...';
+						announceStatus('Waiting for audio...');
+						updateProgressAria();
 					}
 					
 					// Update UI state
@@ -304,6 +470,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						if (!isLoaded || !audioPlayer.src) {
 							playPauseBtn.disabled = true;
 							stopBtn.disabled = true;
+							skipBackBtn.disabled = true;
+							skipForwardBtn.disabled = true;
 							exportMp3Btn.disabled = true;
 							exportWavBtn.disabled = true;
 							progressBar.disabled = true;
@@ -312,8 +480,13 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						
 						const isPaused = audioPlayer.paused;
 						playPauseBtn.disabled = false;
-						playPauseBtn.textContent = isPaused ? '▶️ Play' : '⏸️ Pause';
+						playPauseBtn.innerHTML = isPaused ? 
+							'<span aria-hidden="true">▶️</span> Play' : 
+							'<span aria-hidden="true">⏸️</span> Pause';
+						playPauseBtn.setAttribute('aria-label', isPaused ? 'Play' : 'Pause');
 						stopBtn.disabled = false;
+						skipBackBtn.disabled = false;
+						skipForwardBtn.disabled = false;
 						exportMp3Btn.disabled = false;
 						exportWavBtn.disabled = false;
 						progressBar.disabled = false;
@@ -322,8 +495,53 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 							currentTimeSpan.textContent = formatTime(audioPlayer.currentTime);
 							durationSpan.textContent = formatTime(audioPlayer.duration);
 							progressBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100 || 0;
+							updateProgressAria();
 						}
 					}
+					
+					// Handle keyboard navigation
+					document.addEventListener('keydown', (e) => {
+						if (!audioPlayer || !isLoaded) return;
+						
+						// Don't interfere with button focus navigation
+						if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') {
+							// Allow space to activate buttons
+							if (e.code === 'Space' && e.target.tagName === 'BUTTON') {
+								e.preventDefault();
+								e.target.click();
+							}
+							return;
+						}
+						
+						switch(e.code) {
+							case 'Space':
+								e.preventDefault();
+								playPauseBtn.click();
+								break;
+							case 'ArrowLeft':
+								e.preventDefault();
+								skipBackBtn.click();
+								break;
+							case 'ArrowRight':
+								e.preventDefault();
+								skipForwardBtn.click();
+								break;
+							case 'Home':
+								e.preventDefault();
+								audioPlayer.currentTime = 0;
+								updateUI();
+								announceStatus('Jumped to beginning');
+								break;
+							case 'End':
+								e.preventDefault();
+								if (!isNaN(audioPlayer.duration)) {
+									audioPlayer.currentTime = audioPlayer.duration;
+									updateUI();
+									announceStatus('Jumped to end');
+								}
+								break;
+						}
+					});
 					
 					// Handle messages from extension
 					window.addEventListener('message', event => {
@@ -336,7 +554,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 								
 							case 'loadAudio':
 								clearPlayer();
-								statusDiv.textContent = 'Loading audio...';
+								announceStatus('Loading audio...');
 								shouldAutoPlay = true; // Mark that we should auto-play
 								
 								try {
@@ -348,7 +566,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 									audioPlayer.src = url;
 									audioPlayer.load();
 								} catch (err) {
-									statusDiv.textContent = 'Error decoding audio';
+									announceStatus('Error decoding audio');
 									console.error('Audio decode error:', err);
 									isLoaded = false;
 									shouldAutoPlay = false;
@@ -360,6 +578,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 								if (isLoaded && audioPlayer.paused) {
 									audioPlayer.play().catch(err => {
 										console.error('Play error:', err);
+										announceStatus('Playback failed');
 									});
 								}
 								break;
@@ -384,7 +603,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						// Auto-play when audio is loaded and shouldAutoPlay is true
 						if (shouldAutoPlay) {
 							shouldAutoPlay = false; // Reset flag
-							statusDiv.textContent = 'Starting playback...';
+							announceStatus('Starting playback...');
 							
 							// Use setTimeout to ensure the audio element is ready
 							setTimeout(() => {
@@ -393,32 +612,32 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 								if (playPromise !== undefined) {
 									playPromise.then(() => {
 										console.log('Auto-play started successfully');
-										statusDiv.textContent = 'Playing';
+										announceStatus('Playing');
 									}).catch(err => {
 										console.error('Auto-play failed:', err);
-										statusDiv.textContent = 'Ready - click Play to start';
+										announceStatus('Ready - click Play to start');
 									});
 								}
 							}, 100);
 						} else {
-							statusDiv.textContent = 'Ready - click Play to start';
+							announceStatus('Ready - click Play to start');
 						}
 					});
 					
 					audioPlayer.addEventListener('play', () => {
-						statusDiv.textContent = 'Playing';
+						announceStatus('Playing');
 						updateUI();
 						vscode.postMessage({ type: 'playing' });
 					});
 					
 					audioPlayer.addEventListener('pause', () => {
-						statusDiv.textContent = audioPlayer.currentTime === 0 ? 'Stopped' : 'Paused';
+						announceStatus(audioPlayer.currentTime === 0 ? 'Stopped' : 'Paused');
 						updateUI();
 						vscode.postMessage({ type: 'paused' });
 					});
 					
 					audioPlayer.addEventListener('ended', () => {
-						statusDiv.textContent = 'Finished';
+						announceStatus('Playback finished');
 						audioPlayer.currentTime = 0;
 						updateUI();
 						vscode.postMessage({ type: 'ended' });
@@ -434,7 +653,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 					
 					audioPlayer.addEventListener('error', (e) => {
 						isLoaded = false;
-						statusDiv.textContent = 'Error loading audio';
+						announceStatus('Error loading audio');
 						console.error('Audio error:', e);
 						updateUI();
 						vscode.postMessage({ 
@@ -448,7 +667,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						if (audioPlayer.paused) {
 							audioPlayer.play().catch(err => {
 								console.error('Play button error:', err);
-								statusDiv.textContent = 'Playback failed';
+								announceStatus('Playback failed');
 							});
 						} else {
 							audioPlayer.pause();
@@ -461,6 +680,31 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						audioPlayer.currentTime = 0;
 						updateUI();
 						vscode.postMessage({ type: 'stopped' });
+						announceStatus('Stopped');
+					});
+					
+					// Skip backward button handler
+					skipBackBtn.addEventListener('click', () => {
+						const newTime = Math.max(0, audioPlayer.currentTime - 10);
+						audioPlayer.currentTime = newTime;
+						updateUI();
+						announceStatus('Skipped backward 10 seconds');
+						vscode.postMessage({ 
+							type: 'seeked',
+							position: newTime
+						});
+					});
+					
+					// Skip forward button handler
+					skipForwardBtn.addEventListener('click', () => {
+						const newTime = Math.min(audioPlayer.duration || 0, audioPlayer.currentTime + 10);
+						audioPlayer.currentTime = newTime;
+						updateUI();
+						announceStatus('Skipped forward 10 seconds');
+						vscode.postMessage({ 
+							type: 'seeked',
+							position: newTime
+						});
 					});
 					
 					// Export MP3 button handler
@@ -469,6 +713,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 							type: 'export',
 							format: 'mp3'
 						});
+						announceStatus('Exporting as MP3...');
 					});
 					
 					// Export WAV button handler
@@ -477,16 +722,25 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 							type: 'export',
 							format: 'wav'
 						});
+						announceStatus('Exporting as WAV...');
 					});
 					
 					// Progress bar handler
 					progressBar.addEventListener('input', () => {
 						const time = (progressBar.value / 100) * audioPlayer.duration;
 						audioPlayer.currentTime = time;
+						updateUI();
 						vscode.postMessage({ 
 							type: 'seeked',
 							position: time
 						});
+					});
+					
+					// Progress bar keyboard support
+					progressBar.addEventListener('keydown', (e) => {
+						if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+							e.stopPropagation(); // Prevent global keyboard handler
+						}
 					});
 					
 					// Initial UI state
