@@ -2,6 +2,8 @@
 
 This document outlines the testing approach for the ElevenLabs Text-to-Speech for VSCode extension, including automated unit tests, continuous integration (CI) checks, and manual acceptance tests.
 
+For detailed information on test implementation, see the [Testing Guide](./TESTING.md).
+
 ## 1. Unit Tests
 
 ![codecov](https://codecov.io/gh/lekman/tts-code/graph/badge.svg?token=hDIxvefcrD)

@@ -13,11 +13,14 @@ Key features include:
 
 ## Installation
 
-### Local Installation (Without Marketplace)
+### From the Marketplace
 
-1. **Download the latest `.vsix` file**
+1. **Search for [ElevenLabs Text-to-Speech for VSCode](https://marketplace.visualstudio.com/items?itemName=lekman.tts-code) in the Extensions Marketplace**
+2. **Install the extension**
 
-   Go to the [latest release page](https://github.com/lekman/tts-code/releases) and download the `.vsix` file from the "Assets" section.
+### Local Installation
+
+1. **Download the latest `.vsix`** from the [latest release page](https://github.com/lekman/tts-code/releases) under the "Assets" section.
 
 2. **Install in VS Code or Cursor**
 
