@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/lekman/tts-code/compare/tts-code@v1.1.0...tts-code@v1.2.0) (2025-06-10)
+
+
+### Features
+
+* add GitHub Action for publishing VSCode extension ([2db335c](https://github.com/lekman/tts-code/commit/2db335cebae74b8f5027a1d6c1fed615aed80575))
+* implement comprehensive error handling and logging system ([a8aac28](https://github.com/lekman/tts-code/commit/a8aac28970fd433a5e32036b2c6504897ca0e7cf))
+
+
+### Bug Fixes
+
+* update published extension logging in action ([70764ab](https://github.com/lekman/tts-code/commit/70764abc650449f224e2ce2abb1fd10eed9ca072))
+
 ## [1.1.0](https://github.com/lekman/tts-code/compare/tts-code@v1.0.0...tts-code@v1.1.0) (2025-06-09)
 
 
