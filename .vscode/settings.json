@@ -87,7 +87,8 @@
     ".github": true,
     "webpack.config.js": true,
     "LICENSE": true,
-    "CHANGELOG.md": true
+    "CHANGELOG.md": true,
+    ".vscodeignore": true
   },
   "servers": {
     "taskmaster-ai": {
