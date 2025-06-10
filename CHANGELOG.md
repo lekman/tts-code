@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/lekman/tts-code/compare/tts-code@v1.2.0...tts-code@v1.3.0) (2025-06-10)
+
+
+### Features
+
+* implement comprehensive testing framework ([0e13ab2](https://github.com/lekman/tts-code/commit/0e13ab22ac95531dd91aef72bdd6733b166193c8))
+
 ## [1.2.0](https://github.com/lekman/tts-code/compare/tts-code@v1.1.0...tts-code@v1.2.0) (2025-06-10)
 
 
