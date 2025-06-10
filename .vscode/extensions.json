@@ -1,0 +1,15 @@
+{
+  // See http://go.microsoft.com/fwlink/?LinkId=827846
+  // for the documentation about the extensions.json format
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "amodio.tsl-problem-matcher",
+    "ms-vscode.extension-test-runner",
+    "maptz.regionfolder",
+    "aaron-bond.better-comments",
+    "markis.code-coverage",
+    "vivaxy.vscode-conventional-commits",
+    "orta.vscode-jest",
+    "khrisgriffis.explorer-exclude-toggle"
+  ]
+}
