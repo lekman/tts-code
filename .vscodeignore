@@ -88,6 +88,16 @@ tasks.json
 package/**
 *.vsix
 
+# Project level documentation
+docs/**
+CHANGELOG.md
+LICENSE
+README.md
+images/**
+media/**
+**/*.md
+**/*.txt
+
 # Only include the compiled output
 !out/**
 !package.json
@@ -98,10 +108,3 @@ package/**
 !images/**
 !media/**
 
-# Project level documentation
-docs/**
-CHANGELOG.md
-LICENSE
-README.md
-images/**
-media/**

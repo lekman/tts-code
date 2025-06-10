@@ -448,6 +448,7 @@ tasks.json
 tasks/ 
 
 # Webpack
+package/**
 out/
 dist
 dist/**.* */
