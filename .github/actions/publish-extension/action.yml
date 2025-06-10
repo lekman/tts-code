@@ -38,3 +38,17 @@ runs:
         GITHUB_TOKEN: ${{ inputs.token }}
         RELEASE_IDENTIFIER: ${{ inputs.tag }}
         TARGET_FOLDER: ${{ inputs.target-folder }}
+
+    - name: Find latest VSIX file
+      shell: bash
+      id: find
+      run: |
+        VSIX_FILE=$(ls -t package/*.vsix | head -n1)
+        echo "VSIX_FILE=$VSIX_FILE" >> $GITHUB_OUTPUT
+
+    - name: Publish to Visual Studio Marketplace
+      uses: HaaLeo/publish-vscode-extension@v2
+      with:
+        pat: ${{ inputs.marketplace-token }}
+        registryUrl: https://marketplace.visualstudio.com
+        extensionFile: ${{ steps.find.outputs.VSIX_FILE }}

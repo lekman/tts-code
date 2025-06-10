@@ -180,3 +180,4 @@ jobs:
         with:
           tag: ${{ matrix.release.tag }}
           token: ${{ secrets.NPM_TOKEN }}
+          marketplace-token: ${{ secrets.VS_MARKETPLACE_TOKEN }}
