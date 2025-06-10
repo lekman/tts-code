@@ -47,30 +47,74 @@ runs:
         if [ "$releases_created" != "true" ]; then
           output="[]"
         else
-          # Create JSON array of release matches as matrix for further processing
-          entries=$(echo "$json_string" | jq -c 'to_entries')
+          # Check if we have path-specific release info (monorepo) or single release info
+          has_path_specific=$(echo "$json_string" | jq -r 'keys[] | select(endswith("--release_created"))' | head -n1)
+          
+          if [ -n "$has_path_specific" ]; then
+            # Monorepo format with path-specific keys
+            entries=$(echo "$json_string" | jq -c 'to_entries')
+            selected_entries=$(echo "$entries" | jq -c 'map(select(.key | endswith("--release_created")))')
+            
+            output="["
+            echo ""
+            echo $selected_entries
+            echo ""
+            
+            current_dir=$(pwd)
+            
+            # Loop through selected entries and construct the desired JSON objects
+            for entry in $(echo "$selected_entries" | jq -c '.[]'); do
+              path=$(echo "$entry" | jq -r '.key | gsub("--release_created"; "")')
+              released=$(echo "$entry" | jq -r '.value')
+              tag_key=$(echo "$entry" | jq -r '.key | gsub("--release_created"; "--tag_name")')
+              tag=$(echo "$entries" | jq -r --arg tag_key "$tag_key" '.[] | select(.key == $tag_key) | .value')
+              name=$(echo "$tag" | cut -d'@' -f1)
+              
+              # Extract the release-type from the config file
+              release_type=$(echo "$config_contents" | jq -r --arg path "$path" '.packages[$path]["release-type"] // .["release-type"]')
 
-          # Select entries with key ending in '--release_created' and print the result
-          selected_entries=$(echo "$entries" | jq -c 'map(select(.key | endswith("--release_created")))')
+              # Determine the language
+              cd $path        
+              if [ -f "Chart.yaml" ] || [ -f "Chart.yml" ] || [ -f "chart.yaml" ] || [ -f "chart.yml" ]; then
+                  language="helm"
+              fi
+              if [ -f "Dockerfile" ]; then
+                  language="docker"
+              fi
+              if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
+                  language="python"
+              fi
+              if [ -f "package.json" ]; then
+                  language="node"
+              fi
+              # Check if a *.kts or *.kt file exists within the folder structure
+              if [ -n "$(find . -type f -name '*.kt' -o -name '*.kts' | head -1)" ]; then
+                  language="kotlin"
+              fi
+              # Check if there is a .psd1 file present
+              if [ -n "$(find . -type f -name '*.psd1' | head -1)" ]; then
+                  language="powershell"
+              fi
+              
+              output+=$(jq -n --arg n "$name" --arg p "$path" --arg r "$released" --arg t "$tag" --arg rt "$release_type" --arg l "$language" '{name: $n, path: $p, released: $r, tag: $t, type: $rt, language: $l}')
+              output+=","
 
-          output="["
-
-          echo ""
-          echo $selected_entries
-          echo ""
-
-          current_dir=$(pwd)
-
-          # Loop through selected entries and construct the desired JSON objects
-          for entry in $(echo "$selected_entries" | jq -c '.[]'); do
-            path=$(echo "$entry" | jq -r '.key | gsub("--release_created"; "")')
-            released=$(echo "$entry" | jq -r '.value')
-            tag_key=$(echo "$entry" | jq -r '.key | gsub("--release_created"; "--tag_name")')
-            tag=$(echo "$entries" | jq -r --arg tag_key "$tag_key" '.[] | select(.key == $tag_key) | .value')
+              cd $current_dir
+            done
+          else
+            # Single package format
+            output="["
+            
+            # Get values from the single release format
+            path=$(echo "$json_string" | jq -r '.path // "."')
+            released=$(echo "$json_string" | jq -r '.release_created // "false"')
+            tag=$(echo "$json_string" | jq -r '.tag_name // ""')
             name=$(echo "$tag" | cut -d'@' -f1)
             
             # Extract the release-type from the config file
             release_type=$(echo "$config_contents" | jq -r --arg path "$path" '.packages[$path]["release-type"] // .["release-type"]')
+            
+            current_dir=$(pwd)
 
             # Determine the language
             cd $path        
@@ -99,7 +143,7 @@ runs:
             output+=","
 
             cd $current_dir
-          done
+          fi
 
           # Remove the trailing comma and close the JSON array
           output="${output%,}]"
