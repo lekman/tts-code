@@ -85,7 +85,9 @@
     "**/.taskmaster": true,
     ".github/actions": true,
     ".github": true,
-    "webpack.config.js": true
+    "webpack.config.js": true,
+    "LICENSE": true,
+    "CHANGELOG.md": true
   },
   "servers": {
     "taskmaster-ai": {
