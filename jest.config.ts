@@ -64,9 +64,9 @@ const config: Config.InitialOptions = {
 		"<rootDir>/node_modules/",
 		"<rootDir>/coverage/",
 		"<rootDir>/dist/test/",
-		// Skip e2e tests in CI environment
+		// Skip e2e and integration tests in CI environment
 		...(process.env.CI || process.env.GITHUB_ACTIONS
-			? ["<rootDir>/test/__e2e__/"]
+			? ["<rootDir>/test/e2e/", "<rootDir>/test/integration/"]
 			: []),
 	],
 

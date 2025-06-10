@@ -3,7 +3,7 @@
   "displayName": "ElevenLabs Text-to-Speech for VSCode",
   "version": "1.2.0",
   "description": "Add professional text-to-speech to VSCode with one click—featuring playback controls, text highlighting, and audio export.",
-  "publisher": "Tobias Lekman",
+  "publisher": "lekman",
   "type": "commonjs",
   "engines": {
     "vscode": "^1.74.0"

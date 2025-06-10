@@ -38,14 +38,18 @@ General Usage:
 3. **Add your ElevenLabs API key** if prompted
 4. **Use the text-to-speech user interface** when the conversion is complete to control playback
 
+## Support
+
+If you have any questions, please [open an issue](https://github.com/lekman/tts-code/issues/new?template=feature_request.md).
+
 ## Documentation
 
-- For a detailed overview of the goals, features, technical requirements, and implementation plan, see the [Product Requirements Document (PRD)](./docs/PRD.md).
+- For a detailed overview of the goals, features, technical requirements, and implementation plan, see the [Product Requirements Document (PRD)](https://github.com/lekman/tts-code/blob/tts-code%40v1.2.0/docs/PRD.md).
 
-- For detailed API and module documentation, see the [Code Documentation](./docs/api/README.md).
+- For detailed API and module documentation, see the [Code Documentation](https://github.com/lekman/tts-code/blob/tts-code%40v1.2.0/docs/api/README.md).
 
-- For our test strategy, CI checks, and manual acceptance test instructions, see the [Test Strategy](./docs/TEST.md).
+- For our test strategy, CI checks, and manual acceptance test instructions, see the [Test Strategy](https://github.com/lekman/tts-code/blob/tts-code%40v1.2.0/docs/TEST.md).
 
 ## Contributors
 
-If you would like to contribute to this project, please see our [Contributing Guide](./docs/CONTRIBUTING.md) for development setup and pull request instructions.
+If you would like to contribute to this project, please see our [Contributing Guide](https://github.com/lekman/tts-code/blob/tts-code%40v1.2.0/docs/CONTRIBUTING.md) for development setup and pull request instructions.
