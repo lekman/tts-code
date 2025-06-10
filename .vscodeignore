@@ -1,0 +1,107 @@
+# .vscodeignore - Controls what files are included in the VSIX package
+# IMPORTANT: This file prevents sensitive files from being packaged
+
+# Development files
+.vscode/**
+.vscode-test/**
+src/**
+test/**
+**/*.map
+.gitignore
+.vscodeignore
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/tslint.json
+**/*.map
+**/*.ts
+jest.config.ts
+webpack.config.js
+eslint.config.js
+.prettierrc
+typedoc.json
+
+# Documentation (keep only essential docs)
+docs/**
+!docs/README.md
+!docs/CHANGELOG.md
+!docs/LICENSE
+
+# Dependencies and build artifacts
+node_modules/**
+.npm/**
+.yarn/**
+package-lock.json
+yarn.lock
+
+# Build and test outputs
+.nyc_output/**
+coverage/**
+.rpt2_cache/**
+dist/**
+temp/**
+tmp/**
+*.log
+*.tsbuildinfo
+
+# CI/CD
+.git/**
+.github/**
+.gitlab/**
+.circleci/**
+.travis.yml
+appveyor.yml
+
+# Environment and secrets - CRITICAL TO EXCLUDE
+.env
+.env.*
+*.pem
+*.key
+*.cert
+*.crt
+.npmrc
+secrets.json
+config.json
+credentials.json
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/**
+*.iml
+*.sublime-*
+.vscode/**
+
+# Task management and AI tools
+.taskmaster/**
+.claude/**
+.cursor/**
+.roo/**
+.roomodes/**
+CLAUDE.md
+tasks/**
+tasks.json
+
+# Package files (exclude old packages)
+package/**
+*.vsix
+
+# Only include the compiled output
+!out/**
+!package.json
+!package.nls.json
+!README.md
+!CHANGELOG.md
+!LICENSE
+!images/**
+!media/**
+
+# Project level documentation
+docs/**
+CHANGELOG.md
+LICENSE
+README.md
+images/**
+media/**
