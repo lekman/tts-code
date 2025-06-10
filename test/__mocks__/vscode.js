@@ -23,6 +23,11 @@ module.exports = {
 		createTextEditorDecorationType: jest.fn(() => ({
 			dispose: jest.fn(),
 		})),
+		createOutputChannel: jest.fn(() => ({
+			appendLine: jest.fn(),
+			show: jest.fn(),
+			dispose: jest.fn(),
+		})),
 	},
 	commands: {
 		registerCommand: jest.fn(() => ({ dispose: jest.fn() })),
@@ -30,7 +35,7 @@ module.exports = {
 	},
 	workspace: {
 		getConfiguration: jest.fn(() => ({
-			get: jest.fn(),
+			get: jest.fn((key, defaultValue) => defaultValue),
 			has: jest.fn(),
 			update: jest.fn(),
 		})),

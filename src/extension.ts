@@ -24,6 +24,7 @@ import { ApiKeyManager } from "./apiKeyManager";
 import { AudioManager } from "./audioManager";
 import { AuthenticationError } from "./elevenLabsClient";
 import { HighlightManager } from "./highlightManager";
+import { Logger, ErrorHandler } from "./logger";
 import { isMarkdownFile, markdownToPlainText } from "./markdownUtils";
 import { StorageManager } from "./storageManager";
 import { WebviewProvider } from "./webviewProvider";
@@ -35,6 +36,10 @@ import { WebviewProvider } from "./webviewProvider";
  * @param {vscode.ExtensionContext} context - The VSCode extension context for managing disposables and state.
  */
 export function activate(context: vscode.ExtensionContext) {
+	// Initialize logger first
+	Logger.initialize();
+	Logger.info("ElevenLabs TTS extension activated");
+
 	// Initialize managers with proper dependencies
 	const apiKeyManager = new ApiKeyManager(context);
 	const storageManager = new StorageManager(context);
@@ -95,215 +100,246 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		{ dispose: () => audioManager.dispose() },
 		{ dispose: () => highlightManager.dispose() },
-		{ dispose: () => webviewProvider.dispose() }
+		{ dispose: () => webviewProvider.dispose() },
+		{ dispose: () => Logger.dispose() }
 	);
 
 	// Register commands
 	const speakTextCommand = vscode.commands.registerCommand(
 		"ttsCode.speakText",
 		async () => {
-			const editor = vscode.window.activeTextEditor;
-			if (!editor) {
-				vscode.window.showErrorMessage("No active text editor");
-				return;
-			}
+			await ErrorHandler.withErrorHandling(async () => {
+				Logger.debug("Speak text command triggered");
 
-			const document = editor.document;
-			if (
-				document.languageId !== "markdown" &&
-				document.languageId !== "plaintext"
-			) {
-				vscode.window.showErrorMessage(
-					"Only markdown and text files are supported"
-				);
-				return;
-			}
-
-			const text = document.getText();
-			if (!text) {
-				vscode.window.showErrorMessage("Document is empty");
-				return;
-			}
-
-			// Process markdown to plain text if needed
-			let processedText = text;
-			if (isMarkdownFile(document.fileName)) {
-				processedText = markdownToPlainText(text);
-			}
-
-			// Ensure we have an API key
-			const apiKey = await apiKeyManager.ensureApiKey();
-			if (!apiKey) {
-				return;
-			}
-
-			// Initialize audio manager with API key
-			audioManager.initialize(apiKey);
-
-			try {
-				// Show the webview panel first
-				await vscode.commands.executeCommand(
-					"workbench.view.extension.ttsCodeView"
-				);
-
-				// Clear any previous audio
-				webviewProvider.postMessage({ type: "clearAudio" });
-
-				await vscode.window.withProgress(
-					{
-						location: vscode.ProgressLocation.Notification,
-						title: "Generating audio...",
-						cancellable: false,
-					},
-					async () => {
-						// Create a cache key that includes content hash of the processed text
-						const contentHash = crypto
-							.createHash("md5")
-							.update(processedText)
-							.digest("hex");
-						const cacheKey = `${document.uri.toString()}_${contentHash}`;
-
-						// Generate audio with processed text
-						const audioData = await audioManager.generateAudio(
-							processedText,
-							cacheKey
-						);
-
-						// Set active editor for highlighting
-						highlightManager.setActiveEditor(editor);
-
-						// Show success notification
-						vscode.window.showInformationMessage(
-							`Audio generated successfully`
-						);
-
-						// Add a small delay to ensure webview is ready
-						await new Promise<void>((resolve) => {
-							setTimeout(() => resolve(), 100);
-						});
-
-						// Play the audio
-						audioManager.play(audioData);
-					}
-				);
-			} catch (error) {
-				if (error instanceof AuthenticationError) {
-					// Show warning and automatically trigger API key reset
-					vscode.window
-						.showWarningMessage(
-							"Invalid API key detected. Please enter a new API key.",
-							"Reset API Key"
-						)
-						.then((buttonSelection) => {
-							if (buttonSelection === "Reset API Key") {
-								vscode.commands.executeCommand("ttsCode.resetApiKey");
-							}
-						});
-				} else {
-					vscode.window.showErrorMessage(`Failed to generate audio: ${error}`);
+				const editor = vscode.window.activeTextEditor;
+				if (!editor) {
+					vscode.window.showErrorMessage("No active text editor");
+					return;
 				}
-			}
+
+				const document = editor.document;
+				if (
+					document.languageId !== "markdown" &&
+					document.languageId !== "plaintext"
+				) {
+					vscode.window.showErrorMessage(
+						"Only markdown and text files are supported"
+					);
+					return;
+				}
+
+				const text = document.getText();
+				if (!text) {
+					vscode.window.showErrorMessage("Document is empty");
+					return;
+				}
+
+				// Process markdown to plain text if needed
+				let processedText = text;
+				if (isMarkdownFile(document.fileName)) {
+					processedText = markdownToPlainText(text);
+				}
+
+				// Ensure we have an API key
+				const apiKey = await apiKeyManager.ensureApiKey();
+				if (!apiKey) {
+					return;
+				}
+
+				// Initialize audio manager with API key
+				audioManager.initialize(apiKey);
+
+				Logger.info(
+					`Starting audio generation for document: ${document.fileName}`
+				);
+
+				try {
+					// Show the webview panel first
+					await vscode.commands.executeCommand(
+						"workbench.view.extension.ttsCodeView"
+					);
+
+					// Clear any previous audio
+					webviewProvider.postMessage({ type: "clearAudio" });
+
+					await vscode.window.withProgress(
+						{
+							location: vscode.ProgressLocation.Notification,
+							title: "Generating audio...",
+							cancellable: false,
+						},
+						async () => {
+							// Create a cache key that includes content hash of the processed text
+							const contentHash = crypto
+								.createHash("md5")
+								.update(processedText)
+								.digest("hex");
+							const cacheKey = `${document.uri.toString()}_${contentHash}`;
+
+							// Generate audio with processed text
+							const audioData = await audioManager.generateAudio(
+								processedText,
+								cacheKey
+							);
+
+							// Set active editor for highlighting
+							highlightManager.setActiveEditor(editor);
+
+							// Show success notification
+							vscode.window.showInformationMessage(
+								`Audio generated successfully`
+							);
+
+							Logger.info("Audio generation completed successfully");
+
+							// Add a small delay to ensure webview is ready
+							await new Promise<void>((resolve) => {
+								setTimeout(() => resolve(), 100);
+							});
+
+							// Play the audio
+							audioManager.play(audioData);
+						}
+					);
+				} catch (error) {
+					if (error instanceof AuthenticationError) {
+						Logger.error(
+							"Authentication error during audio generation",
+							error as Error
+						);
+						// Show warning and automatically trigger API key reset
+						vscode.window
+							.showWarningMessage(
+								"Invalid API key detected. Please enter a new API key.",
+								"Reset API Key"
+							)
+							.then((buttonSelection) => {
+								if (buttonSelection === "Reset API Key") {
+									vscode.commands.executeCommand("ttsCode.resetApiKey");
+								}
+							});
+					} else {
+						throw error; // Re-throw to be handled by ErrorHandler
+					}
+				}
+			}, "Failed to generate audio");
 		}
 	);
 
 	const speakSelectionCommand = vscode.commands.registerCommand(
 		"ttsCode.speakSelection",
 		async () => {
-			const editor = vscode.window.activeTextEditor;
-			if (!editor) {
-				vscode.window.showWarningMessage("No active editor!");
-				return;
-			}
+			await ErrorHandler.withErrorHandling(async () => {
+				Logger.debug("Speak selection command triggered");
 
-			const selection = editor.selection;
-			const selectedText = editor.document.getText(selection);
-
-			if (!selectedText) {
-				vscode.window.showWarningMessage("No text selected!");
-				return;
-			}
-
-			// Process markdown to plain text if needed
-			let processedText = selectedText;
-			if (isMarkdownFile(editor.document.fileName)) {
-				processedText = markdownToPlainText(selectedText);
-			}
-
-			// Ensure we have an API key
-			const apiKey = await apiKeyManager.ensureApiKey();
-			if (!apiKey) {
-				return;
-			}
-
-			// Initialize audio manager with API key
-			audioManager.initialize(apiKey);
-
-			try {
-				// Show the webview panel first
-				await vscode.commands.executeCommand(
-					"workbench.view.extension.ttsCodeView"
-				);
-
-				// Clear any previous audio
-				webviewProvider.postMessage({ type: "clearAudio" });
-
-				await vscode.window.withProgress(
-					{
-						location: vscode.ProgressLocation.Notification,
-						title: "Generating audio for selection...",
-						cancellable: false,
-					},
-					async () => {
-						// Create a cache key that includes content hash of the processed text
-						const contentHash = crypto
-							.createHash("md5")
-							.update(processedText)
-							.digest("hex");
-						const cacheKey = `${editor.document.uri.toString()}_selection_${contentHash}`;
-
-						// Generate audio for selection with processed text
-						const audioData = await audioManager.generateAudio(
-							processedText,
-							cacheKey
-						);
-
-						// Set active editor for highlighting
-						highlightManager.setActiveEditor(editor);
-						highlightManager.highlightRange(
-							new vscode.Range(selection.start, selection.end)
-						);
-
-						// Show success notification
-						vscode.window.showInformationMessage(
-							`Audio generated successfully for selection`
-						);
-
-						// Add a small delay to ensure webview is ready
-						await new Promise<void>((resolve) => {
-							setTimeout(() => resolve(), 100);
-						});
-
-						// Play the audio
-						audioManager.play(audioData);
-					}
-				);
-			} catch (error) {
-				if (error instanceof AuthenticationError) {
-					// Show warning and automatically trigger API key reset
-					vscode.window
-						.showWarningMessage(
-							"Invalid API key detected. Please enter a new API key.",
-							"Reset API Key"
-						)
-						.then((buttonSelection) => {
-							if (buttonSelection === "Reset API Key") {
-								vscode.commands.executeCommand("ttsCode.resetApiKey");
-							}
-						});
-				} else {
-					vscode.window.showErrorMessage(`Failed to generate audio: ${error}`);
+				const editor = vscode.window.activeTextEditor;
+				if (!editor) {
+					vscode.window.showWarningMessage("No active editor!");
+					return;
 				}
-			}
+
+				const selection = editor.selection;
+				const selectedText = editor.document.getText(selection);
+
+				if (!selectedText) {
+					vscode.window.showWarningMessage("No text selected!");
+					return;
+				}
+
+				// Process markdown to plain text if needed
+				let processedText = selectedText;
+				if (isMarkdownFile(editor.document.fileName)) {
+					processedText = markdownToPlainText(selectedText);
+				}
+
+				// Ensure we have an API key
+				const apiKey = await apiKeyManager.ensureApiKey();
+				if (!apiKey) {
+					return;
+				}
+
+				// Initialize audio manager with API key
+				audioManager.initialize(apiKey);
+
+				Logger.info(
+					`Starting audio generation for selection in: ${editor.document.fileName}`
+				);
+
+				try {
+					// Show the webview panel first
+					await vscode.commands.executeCommand(
+						"workbench.view.extension.ttsCodeView"
+					);
+
+					// Clear any previous audio
+					webviewProvider.postMessage({ type: "clearAudio" });
+
+					await vscode.window.withProgress(
+						{
+							location: vscode.ProgressLocation.Notification,
+							title: "Generating audio for selection...",
+							cancellable: false,
+						},
+						async () => {
+							// Create a cache key that includes content hash of the processed text
+							const contentHash = crypto
+								.createHash("md5")
+								.update(processedText)
+								.digest("hex");
+							const cacheKey = `${editor.document.uri.toString()}_selection_${contentHash}`;
+
+							// Generate audio for selection with processed text
+							const audioData = await audioManager.generateAudio(
+								processedText,
+								cacheKey
+							);
+
+							// Set active editor for highlighting
+							highlightManager.setActiveEditor(editor);
+							highlightManager.highlightRange(
+								new vscode.Range(selection.start, selection.end)
+							);
+
+							// Show success notification
+							vscode.window.showInformationMessage(
+								`Audio generated successfully for selection`
+							);
+
+							Logger.info(
+								"Audio generation completed successfully for selection"
+							);
+
+							// Add a small delay to ensure webview is ready
+							await new Promise<void>((resolve) => {
+								setTimeout(() => resolve(), 100);
+							});
+
+							// Play the audio
+							audioManager.play(audioData);
+						}
+					);
+				} catch (error) {
+					if (error instanceof AuthenticationError) {
+						Logger.error(
+							"Authentication error during audio generation",
+							error as Error
+						);
+						// Show warning and automatically trigger API key reset
+						vscode.window
+							.showWarningMessage(
+								"Invalid API key detected. Please enter a new API key.",
+								"Reset API Key"
+							)
+							.then((buttonSelection) => {
+								if (buttonSelection === "Reset API Key") {
+									vscode.commands.executeCommand("ttsCode.resetApiKey");
+								}
+							});
+					} else {
+						throw error; // Re-throw to be handled by ErrorHandler
+					}
+				}
+			}, "Failed to generate audio for selection");
 		}
 	);
 
@@ -376,6 +412,7 @@ export function activate(context: vscode.ExtensionContext) {
  * @returns {void}
  */
 export function deactivate(): void {
+	Logger.info("ElevenLabs TTS extension deactivated");
 	// Cleanup is handled by the disposables in context.subscriptions
 	// The managers' dispose methods will be called automatically
 }
