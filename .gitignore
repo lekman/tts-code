@@ -453,5 +453,4 @@ out/
 dist
 dist/**.* */
 temp.md
-LICENSE
 bug.md

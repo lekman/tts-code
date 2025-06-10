@@ -23,8 +23,8 @@ typedoc.json
 # Documentation (keep only essential docs)
 docs/**
 !docs/README.md
-!docs/CHANGELOG.md
-!docs/LICENSE
+!docs/img/**.*
+!CHANGELOG.md
 
 # Dependencies and build artifacts
 node_modules/**
