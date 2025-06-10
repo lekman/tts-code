@@ -17,6 +17,7 @@ module.exports = {
 		showErrorMessage: jest.fn(),
 		showWarningMessage: jest.fn(),
 		showInputBox: jest.fn(),
+		showQuickPick: jest.fn(),
 		withProgress: jest.fn((options, callback) => Promise.resolve(callback())),
 		activeTextEditor: null,
 		registerWebviewViewProvider: jest.fn(() => ({ dispose: jest.fn() })),

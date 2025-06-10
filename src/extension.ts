@@ -17,6 +17,7 @@
  */
 
 import * as crypto from "crypto";
+import * as path from "path";
 
 import * as vscode from "vscode";
 
@@ -92,6 +93,12 @@ export function activate(context: vscode.ExtensionContext) {
 			case "ended":
 				audioManager.stop();
 				highlightManager.clearHighlights();
+				break;
+			case "export":
+				if (message.format) {
+					// Execute the export command with the specified format
+					vscode.commands.executeCommand("ttsCode.exportAudio", message.format);
+				}
 				break;
 		}
 	});
@@ -372,10 +379,52 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const exportAudioCommand = vscode.commands.registerCommand(
 		"ttsCode.exportAudio",
-		() => {
-			vscode.window.showInformationMessage(
-				"[TTS] Export audio - Not yet implemented."
-			);
+		async (preSelectedFormat?: string) => {
+			await ErrorHandler.withErrorHandling(async () => {
+				Logger.debug("Export audio command triggered");
+
+				// Check if we have current audio data
+				const currentAudioData = audioManager.getCurrentAudioData();
+				if (!currentAudioData) {
+					vscode.window.showWarningMessage(
+						"No audio to export. Please generate audio first."
+					);
+					return;
+				}
+
+				// Get the active editor for filename
+				const editor = vscode.window.activeTextEditor;
+				const fileName = editor
+					? path.basename(
+							editor.document.fileName,
+							path.extname(editor.document.fileName)
+						)
+					: "tts_audio";
+
+				// Use pre-selected format if provided, otherwise ask user
+				let format = preSelectedFormat;
+				if (!format) {
+					format = await vscode.window.showQuickPick(["mp3", "wav"], {
+						placeHolder: "Select audio format",
+						title: "Export Audio",
+					});
+
+					if (!format) {
+						return; // User cancelled
+					}
+				}
+
+				// Save the audio file
+				const savedUri = await storageManager.saveAudioFile(
+					currentAudioData,
+					fileName,
+					format as "mp3" | "wav"
+				);
+
+				if (savedUri) {
+					Logger.info(`Audio exported successfully to: ${savedUri.fsPath}`);
+				}
+			}, "Failed to export audio");
 		}
 	);
 
