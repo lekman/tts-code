@@ -83,8 +83,7 @@ jobs:
         uses: ./.github/actions/release-please-matrix
         id: report
         with:
-          json: '{  "releases_created": "true",  "release_created": "true",  "id": "224354996",  "name": "tts-code: v1.3.0",  "tag_name": "tts-code@v1.3.0",  "sha": "0048aae699a5193eda06ef03232a57fa7b8d87ca",  "body": "## [1.3.0](https://github.com/lekman/tts-code/compare/tts-code@v1.2.0...tts-code@v1.3.0) (2025-06-10)\n\n\n### Features\n\n* implement comprehensive testing framework ([0e13ab2](https://github.com/lekman/tts-code/commit/0e13ab22ac95531dd91aef72bdd6733b166193c8))",  "html_url": "https://github.com/lekman/tts-code/releases/tag/tts-code%40v1.3.0",  "draft": "false",  "upload_url": "https://uploads.github.com/repos/lekman/tts-code/releases/224354996/assets{?name,label}",  "path": ".",  "version": "1.3.0",  "major": "1",  "minor": "3",  "patch": "0",  "prNumber": "14",  "paths_released": "[\".\"]",  "prs_created": "false"}'
-          #${{ needs.release.outputs.json }}
+          json: ${{ needs.release.outputs.json }}
 
 
   # Uncomment this job, and comment out the 'Prepare Release Matrix' job
