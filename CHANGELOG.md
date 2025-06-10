@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/lekman/tts-code/compare/tts-code@v1.3.1...tts-code@v1.3.2) (2025-06-10)
+
+
+### Bug Fixes
+
+* add VSIX file publishing to Visual Studio Marketplace and update package.json metadata ([5e805ce](https://github.com/lekman/tts-code/commit/5e805ce50088249a46a0670b2ec3d73a4904bc5a))
+
 ## [1.3.1](https://github.com/lekman/tts-code/compare/tts-code@v1.3.0...tts-code@v1.3.1) (2025-06-10)
 
 
