@@ -8,6 +8,8 @@ If you have an idea for a new feature, please [submit a feature request](https:/
 
 Please follow the guidelines below to get started with development or contributing code.
 
+Thank you for helping improve the project! 
+
 ## Development Mode
 
 1. **Clone the repository:**
@@ -54,4 +56,8 @@ Please follow the guidelines below to get started with development or contributi
    - All unit tests and linting checks must pass.
    - A code owner must approve the merge. See the [CODEOWNERS file](../.github/CODEOWNERS) for details.
 
-Thank you for helping improve the project! 
+## Local Settings
+
+Shared settings for the project are stored in the [.vscode](../.vscode) folder.
+
+- Various "noise" files are hidden using the workspace settings. To show them, install the [Explorer Exclude Toggle](https://marketplace.visualstudio.com/items?itemName=KhrisGriffis.explorer-exclude-toggle), and run the command `Toggle Files Exclude (Show)` from the command palette.
