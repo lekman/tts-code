@@ -4,11 +4,33 @@
 
 If you discover a security vulnerability in the ElevenLabs Text-to-Speech for VSCode extension, please [raise an issue](https://github.com/lekman/tts-code/issues/new?template=security-incident.md) in the repository. Clearly describe the issue, steps to reproduce, and any relevant details. If the issue is sensitive, you may request a private disclosure channel in your issue description.
 
+## Security Incident Transparency
+
+We believe in complete transparency when it comes to security incidents. As part of our commitment to building trust and improving security practices across the development community, we document and publicly report all security incidents that occur in this project.
+
+### Incident Reporting and Documentation
+
+All security incidents, regardless of severity, are:
+- Documented as GitHub issues with detailed incident reports
+- Tagged with the `security` label for easy identification
+- Include comprehensive Root Cause Analysis (RCA) when applicable
+- Remain publicly visible as a learning resource for the community
+
+You can [view all current and historical security incidents](https://github.com/lekman/tts-code/issues?q=label%3A%22security%22) for this project.
+
+
+### Why We Practice Transparency
+
+1. **Accountability**: Public documentation holds us accountable for addressing security issues promptly and thoroughly
+2. **Learning**: Other developers can learn from our experiences and avoid similar issues
+3. **Trust**: Transparency builds trust with users and contributors
+4. **Continuous Improvement**: Public scrutiny helps us improve our security practices
+
 ## Dependency and Vulnerability Management
 
 [![GitHub Advanced Security](https://github.com/lekman/tts-code/actions/workflows/codeql.yaml/badge.svg)](https://github.com/lekman/tts-code/actions/workflows/codeql.yaml)
 
-- We regularly test all dependencies for known vulnerabilities using `npm audit` and other automated tools.
+- We regularly test all dependencies for known vulnerabilities using automated tools.
 - GitHub Advanced Security is enabled for this repository and is integrated into our pull request and continuous integration (CI) workflows.
 - Dependency and vulnerability checks are automatically run on every pull request and on a regular schedule to detect and address issues as early as possible.
 
