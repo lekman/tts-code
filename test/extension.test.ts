@@ -38,6 +38,7 @@ describe("extension", () => {
 	let mockAudioManager: any;
 	let mockHighlightManager: any;
 	let mockWebviewProvider: any;
+	let mockStorageManager: any;
 
 	beforeEach(() => {
 		// Clear all mocks
@@ -119,6 +120,15 @@ describe("extension", () => {
 		};
 		WebviewProvider.mockImplementation(() => mockWebviewProvider);
 		WebviewProvider.viewType = "ttsCode.webview";
+
+		const StorageManager = require("../src/storageManager").StorageManager;
+		mockStorageManager = {
+			saveAudioFile: jest.fn(),
+			getAudioCache: jest.fn(),
+			setAudioCache: jest.fn(),
+			readTextFile: jest.fn(),
+		};
+		StorageManager.mockImplementation(() => mockStorageManager);
 	});
 
 	it("should export an activate function", () => {
@@ -459,14 +469,46 @@ describe("extension", () => {
 			);
 		});
 
-		it("should show not implemented message for exportAudio", () => {
+		it("should handle exportAudio command", async () => {
 			const command = mockCommands.find(
 				(cmd) => cmd.command === "ttsCode.exportAudio"
 			);
-			command.callback();
 
-			expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
-				"[TTS] Export audio - Not yet implemented."
+			// Test 1: No audio data
+			mockAudioManager.getCurrentAudioData.mockReturnValue(undefined);
+
+			await command.callback();
+
+			expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
+				"No audio to export. Please generate audio first."
+			);
+
+			// Test 2: With audio data and format selection
+			const mockAudioData = Buffer.from("test audio data");
+			mockAudioManager.getCurrentAudioData.mockReturnValue(mockAudioData);
+			(vscode.window.showQuickPick as jest.Mock).mockResolvedValue("mp3");
+			const mockUri = vscode.Uri.parse("file:///test/audio.mp3");
+			mockStorageManager.saveAudioFile.mockResolvedValue(mockUri);
+
+			await command.callback();
+
+			expect(vscode.window.showQuickPick).toHaveBeenCalledWith(["mp3", "wav"], {
+				placeHolder: "Select audio format",
+				title: "Export Audio",
+			});
+			expect(mockStorageManager.saveAudioFile).toHaveBeenCalledWith(
+				mockAudioData,
+				"test",
+				"mp3"
+			);
+
+			// Test 3: Pre-selected format
+			await command.callback("wav");
+
+			expect(mockStorageManager.saveAudioFile).toHaveBeenCalledWith(
+				mockAudioData,
+				"test",
+				"wav"
 			);
 		});
 	});
@@ -537,6 +579,15 @@ describe("extension", () => {
 
 			expect(mockAudioManager.stop).toHaveBeenCalled();
 			expect(mockHighlightManager.clearHighlights).toHaveBeenCalled();
+		});
+
+		it("should handle export message", () => {
+			messageHandler({ type: "export", format: "mp3" });
+
+			expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+				"ttsCode.exportAudio",
+				"mp3"
+			);
 		});
 	});
 

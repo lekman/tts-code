@@ -77,7 +77,7 @@ This guide provides a complete framework for writing a Product Requirements Docu
 6. **Audio Export**
 
    - User Story: "As a user, I want to save audio files so I can listen offline"
-   - Formats: MP3 (primary), WAV (optional)
+   - Format: MP3
    - Storage: User-configurable location
 
 7. **API Key Management**
