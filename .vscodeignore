@@ -22,7 +22,7 @@ typedoc.json
 
 # Documentation (keep only essential docs)
 docs/**
-!docs/README.md
+!README.md
 !docs/img/**.*
 !CHANGELOG.md
 
@@ -92,7 +92,6 @@ package/**
 docs/**
 CHANGELOG.md
 LICENSE
-README.md
 images/**
 media/**
 **/*.md

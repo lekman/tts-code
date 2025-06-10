@@ -1,6 +1,6 @@
 # ElevenLabs Text-to-Speech for VSCode
 
-![ElevenLabs Text-to-Speech for VSCode](./img/screenshot.png)
+![ElevenLabs Text-to-Speech for VSCode](./docs/img/screenshot.png)
 
 ElevenLabs Text-to-Speech for VSCode is a developer-focused extension that brings high-quality voice synthesis directly into your coding environment. Designed for developers, technical writers, and accessibility-focused users, this extension enables you to listen to markdown and text files with advanced playback controls, synchronized text highlighting, and audio export capabilities. The project aims to reduce eye strain, improve documentation review workflows, and make VSCode more accessible for all users.
 
@@ -40,12 +40,12 @@ General Usage:
 
 ## Documentation
 
-- For a detailed overview of the goals, features, technical requirements, and implementation plan, see the [Product Requirements Document (PRD)](./PRD.md).
+- For a detailed overview of the goals, features, technical requirements, and implementation plan, see the [Product Requirements Document (PRD)](./docs/PRD.md).
 
-- For detailed API and module documentation, see the [Code Documentation](./api/README.md).
+- For detailed API and module documentation, see the [Code Documentation](./docs/api/README.md).
 
-- For our test strategy, CI checks, and manual acceptance test instructions, see the [Test Strategy](./TEST.md).
+- For our test strategy, CI checks, and manual acceptance test instructions, see the [Test Strategy](./docs/TEST.md).
 
 ## Contributors
 
-If you would like to contribute to this project, please see our [Contributing Guide](./CONTRIBUTING.md) for development setup and pull request instructions.
+If you would like to contribute to this project, please see our [Contributing Guide](./docs/CONTRIBUTING.md) for development setup and pull request instructions.
