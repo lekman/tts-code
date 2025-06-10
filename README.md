@@ -13,11 +13,14 @@ Key features include:
 
 ## Installation
 
-### Local Installation (Without Marketplace)
+### From the Marketplace
 
-1. **Download the latest `.vsix` file**
+1. **Search for [ElevenLabs Text-to-Speech for VSCode](https://marketplace.visualstudio.com/items?itemName=lekman.tts-code) in the Extensions Marketplace**
+2. **Install the extension**
 
-   Go to the [latest release page](https://github.com/lekman/tts-code/releases) and download the `.vsix` file from the "Assets" section.
+### Local Installation
+
+1. **Download the latest `.vsix`** from the [latest release page](https://github.com/lekman/tts-code/releases) under the "Assets" section.
 
 2. **Install in VS Code or Cursor**
 
@@ -38,14 +41,18 @@ General Usage:
 3. **Add your ElevenLabs API key** if prompted
 4. **Use the text-to-speech user interface** when the conversion is complete to control playback
 
+## Support
+
+If you have any questions, please [open an issue](https://github.com/lekman/tts-code/issues/new?template=feature_request.md).
+
 ## Documentation
 
-- For a detailed overview of the goals, features, technical requirements, and implementation plan, see the [Product Requirements Document (PRD)](./docs/PRD.md).
+- For a detailed overview of the goals, features, technical requirements, and implementation plan, see the [Product Requirements Document (PRD)](https://github.com/lekman/tts-code/blob/main/docs/PRD.md).
 
-- For detailed API and module documentation, see the [Code Documentation](./docs/api/README.md).
+- For detailed API and module documentation, see the [Code Documentation](https://github.com/lekman/tts-code/blob/main/docs/api/README.md).
 
-- For our test strategy, CI checks, and manual acceptance test instructions, see the [Test Strategy](./docs/TEST.md).
+- For our test strategy, CI checks, and manual acceptance test instructions, see the [Test Strategy](https://github.com/lekman/tts-code/blob/main/docs/TEST.md).
 
 ## Contributors
 
-If you would like to contribute to this project, please see our [Contributing Guide](./docs/CONTRIBUTING.md) for development setup and pull request instructions.
+If you would like to contribute to this project, please see our [Contributing Guide](https://github.com/lekman/tts-code/blob/main/docs/CONTRIBUTING.md) for development setup and pull request instructions.

@@ -220,6 +220,7 @@ module.exports = [
 			"no-console": "off",
 			"no-undef": "off",
 			"@typescript-eslint/no-explicit-any": "off",
+			"jest/no-disabled-tests": "off",
 		},
 	},
 	{
