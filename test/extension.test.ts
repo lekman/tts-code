@@ -87,6 +87,9 @@ describe("extension", () => {
 		mockAudioManager = {
 			initialize: jest.fn(),
 			generateAudio: jest.fn().mockResolvedValue(Buffer.from("test audio")),
+			generateAudioChunked: jest
+				.fn()
+				.mockResolvedValue(Buffer.from("test audio")),
 			play: jest.fn(),
 			pause: jest.fn(),
 			resume: jest.fn(),
@@ -188,6 +191,10 @@ describe("extension", () => {
 			speakTextCommand = mockCommands.find(
 				(cmd) => cmd.command === "ttsCode.speakText"
 			);
+			// Reset generateAudioChunked mock
+			mockAudioManager.generateAudioChunked.mockResolvedValue(
+				Buffer.from("test audio")
+			);
 		});
 
 		it("should show error when no active editor", async () => {
@@ -232,6 +239,61 @@ describe("extension", () => {
 			);
 		});
 
+		it("should show error for files larger than 50MB", async () => {
+			// Create a string larger than 50MB
+			const largeText = "a".repeat(51 * 1024 * 1024); // 51MB
+			(vscode.window as any).activeTextEditor = {
+				document: {
+					languageId: "markdown",
+					getText: jest.fn().mockReturnValue(largeText),
+					fileName: "test.md",
+				},
+			};
+
+			await speakTextCommand.callback();
+
+			expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+				expect.stringContaining("File is too large")
+			);
+			expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+				expect.stringContaining("Maximum supported size is 50MB")
+			);
+		});
+
+		it("should report progress during chunked audio generation", async () => {
+			const mockEditor = {
+				document: {
+					languageId: "markdown",
+					getText: jest
+						.fn()
+						.mockReturnValue("# Long document with multiple chunks"),
+					uri: { toString: () => "file://test.md" },
+					fileName: "test.md",
+				},
+			};
+			(vscode.window as any).activeTextEditor = mockEditor;
+
+			// Mock progress reporting
+			let progressCallback: any;
+			mockAudioManager.generateAudioChunked.mockImplementation(
+				(text, key, voice, onProgress) => {
+					progressCallback = onProgress;
+					// Simulate progress updates
+					onProgress(25, "Processing chunk 1 of 4");
+					onProgress(50, "Processing chunk 2 of 4");
+					onProgress(75, "Processing chunk 3 of 4");
+					onProgress(100, "Processing chunk 4 of 4");
+					return Promise.resolve(Buffer.from("test audio"));
+				}
+			);
+
+			await speakTextCommand.callback();
+
+			// Verify progress was reported
+			expect(progressCallback).toBeDefined();
+			expect(mockAudioManager.generateAudioChunked).toHaveBeenCalled();
+		});
+
 		it("should generate and play audio for markdown file", async () => {
 			const mockEditor = {
 				document: {
@@ -251,10 +313,12 @@ describe("extension", () => {
 			// Should initialize audio manager
 			expect(mockAudioManager.initialize).toHaveBeenCalledWith("test-api-key");
 
-			// Should generate audio with processed markdown
-			expect(mockAudioManager.generateAudio).toHaveBeenCalledWith(
+			// Should generate audio with chunking
+			expect(mockAudioManager.generateAudioChunked).toHaveBeenCalledWith(
 				"Test markdown.",
-				expect.stringContaining("file://test.md_")
+				expect.stringContaining("file://test.md_"),
+				undefined,
+				expect.any(Function)
 			);
 
 			// Should set active editor for highlighting
@@ -288,7 +352,7 @@ describe("extension", () => {
 		});
 
 		it("should handle authentication errors", async () => {
-			mockAudioManager.generateAudio.mockRejectedValue(
+			mockAudioManager.generateAudioChunked.mockRejectedValue(
 				new AuthenticationError("Invalid API key")
 			);
 			(vscode.window as any).activeTextEditor = {
@@ -320,7 +384,7 @@ describe("extension", () => {
 		});
 
 		it("should handle general errors", async () => {
-			mockAudioManager.generateAudio.mockRejectedValue(
+			mockAudioManager.generateAudioChunked.mockRejectedValue(
 				new Error("Network error")
 			);
 			(vscode.window as any).activeTextEditor = {
@@ -395,10 +459,12 @@ describe("extension", () => {
 
 			await speakSelectionCommand.callback();
 
-			// Should generate audio for selection with hash-based cache key
-			expect(mockAudioManager.generateAudio).toHaveBeenCalledWith(
+			// Should generate audio for selection with chunking
+			expect(mockAudioManager.generateAudioChunked).toHaveBeenCalledWith(
 				"selected text",
-				expect.stringContaining("file://test.md_selection_")
+				expect.stringContaining("file://test.md_selection_"),
+				undefined,
+				expect.any(Function)
 			);
 
 			// Should highlight selection
