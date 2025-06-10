@@ -326,7 +326,8 @@ describe("extension", () => {
 
 			// Should show error message
 			expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-				"Failed to generate audio: Error: Network error"
+				"Failed to generate audio",
+				"Show Logs"
 			);
 		});
 	});

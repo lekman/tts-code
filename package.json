@@ -151,6 +151,24 @@
           "icon": "$(play-circle)"
         }
       ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "ElevenLabs TTS",
+      "properties": {
+        "elevenlabs-tts.logLevel": {
+          "type": "string",
+          "default": "info",
+          "enum": ["debug", "info", "warn", "error"],
+          "description": "Set the logging level for the extension",
+          "enumDescriptions": [
+            "Show all messages including debug information",
+            "Show informational messages and above",
+            "Show warnings and errors only",
+            "Show errors only"
+          ]
+        }
+      }
     }
   },
   "dependencies": {
