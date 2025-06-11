@@ -12,13 +12,23 @@ const createEventEmitter = () => {
 };
 
 module.exports = {
+	ConfigurationTarget: {
+		Global: 1,
+		Workspace: 2,
+		WorkspaceFolder: 3
+	},
 	window: {
 		showInformationMessage: jest.fn(),
 		showErrorMessage: jest.fn(),
 		showWarningMessage: jest.fn(),
 		showInputBox: jest.fn(),
 		showQuickPick: jest.fn(),
-		withProgress: jest.fn((options, callback) => Promise.resolve(callback())),
+		withProgress: jest.fn((options, callback) => {
+			const progress = {
+				report: jest.fn()
+			};
+			return Promise.resolve(callback(progress));
+		}),
 		activeTextEditor: null,
 		registerWebviewViewProvider: jest.fn(() => ({ dispose: jest.fn() })),
 		createTextEditorDecorationType: jest.fn(() => ({

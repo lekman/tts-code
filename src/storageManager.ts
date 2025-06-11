@@ -92,7 +92,7 @@ export class StorageManager {
 	): Promise<vscode.Uri | undefined> {
 		try {
 			// Get user-configured export location or use default
-			const config = vscode.workspace.getConfiguration("ttsCode");
+			const config = vscode.workspace.getConfiguration("elevenlabs-tts");
 			let exportPath = config.get<string>("exportPath");
 
 			let exportUri: vscode.Uri;

@@ -8,6 +8,6 @@
 
 > **PlaybackState** = `"playing"` \| `"paused"` \| `"stopped"`
 
-Defined in: audioManager.ts:27
+Defined in: audioManager.ts:28
 
 Playback state for audio

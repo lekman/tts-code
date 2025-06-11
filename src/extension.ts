@@ -193,11 +193,16 @@ export function activate(context: vscode.ExtensionContext) {
 								.digest("hex");
 							const cacheKey = `${document.uri.toString()}_${contentHash}`;
 
+							// Get selected voice from settings
+							const config =
+								vscode.workspace.getConfiguration("elevenlabs-tts");
+							const voiceId = config.get<string>("voiceId");
+
 							// Generate audio with chunking and progress reporting
 							const audioData = await audioManager.generateAudioChunked(
 								processedText,
 								cacheKey,
-								undefined, // Use default voice
+								voiceId, // Use selected voice from settings
 								(progressPercent, message) => {
 									progress.report({
 										increment: progressPercent,
@@ -312,11 +317,16 @@ export function activate(context: vscode.ExtensionContext) {
 								.digest("hex");
 							const cacheKey = `${editor.document.uri.toString()}_selection_${contentHash}`;
 
+							// Get selected voice from settings
+							const config =
+								vscode.workspace.getConfiguration("elevenlabs-tts");
+							const voiceId = config.get<string>("voiceId");
+
 							// Generate audio for selection with chunking and progress
 							const audioData = await audioManager.generateAudioChunked(
 								processedText,
 								cacheKey,
-								undefined, // Use default voice
+								voiceId, // Use selected voice from settings
 								(progressPercent, message) => {
 									progress.report({
 										increment: progressPercent,
@@ -459,6 +469,84 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 
+	const updateVoiceListCommand = vscode.commands.registerCommand(
+		"ttsCode.updateVoiceList",
+		async () => {
+			await ErrorHandler.withErrorHandling(async () => {
+				Logger.debug("Update voice list command triggered");
+
+				// Ensure we have an API key
+				const apiKey = await apiKeyManager.ensureApiKey();
+				if (!apiKey) {
+					return;
+				}
+
+				// Initialize audio manager with API key
+				audioManager.initialize(apiKey);
+
+				await vscode.window.withProgress(
+					{
+						location: vscode.ProgressLocation.Notification,
+						title: "Fetching available voices...",
+						cancellable: false,
+					},
+					async () => {
+						try {
+							// Get voices from ElevenLabs
+							const voices = await audioManager.getAvailableVoices();
+
+							if (!voices || voices.length === 0) {
+								vscode.window.showWarningMessage("No voices available");
+								return;
+							}
+
+							// Get current configuration
+							const config = vscode.workspace.getConfiguration();
+
+							// Show quick pick to let user select a voice
+							const items = voices.map((voice) => ({
+								label: voice.name,
+								description: voice.labels
+									? Object.values(voice.labels).join(", ")
+									: "",
+								detail: voice.description,
+								voiceId: voice.voiceId,
+							}));
+
+							const selected = await vscode.window.showQuickPick(items, {
+								placeHolder: "Select a voice to use",
+								title: "Choose Voice",
+							});
+
+							if (selected) {
+								// Update the selected voice in settings
+								await config.update(
+									"elevenlabs-tts.voiceId",
+									selected.voiceId,
+									vscode.ConfigurationTarget.Global
+								);
+								vscode.window.showInformationMessage(
+									`Voice changed to: ${selected.label}`
+								);
+								Logger.info(
+									`Voice changed to: ${selected.label} (${selected.voiceId})`
+								);
+							}
+						} catch (error) {
+							if (error instanceof AuthenticationError) {
+								vscode.window.showErrorMessage(
+									"Invalid API key. Please reset your API key."
+								);
+							} else {
+								throw error;
+							}
+						}
+					}
+				);
+			}, "Failed to update voice list");
+		}
+	);
+
 	context.subscriptions.push(
 		speakTextCommand,
 		speakSelectionCommand,
@@ -466,7 +554,8 @@ export function activate(context: vscode.ExtensionContext) {
 		skipForwardCommand,
 		skipBackwardCommand,
 		exportAudioCommand,
-		resetApiKeyCommand
+		resetApiKeyCommand,
+		updateVoiceListCommand
 	);
 
 	// Register the webview provider (if needed)

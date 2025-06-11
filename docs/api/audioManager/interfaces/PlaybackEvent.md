@@ -6,7 +6,7 @@
 
 # Interface: PlaybackEvent
 
-Defined in: audioManager.ts:32
+Defined in: audioManager.ts:33
 
 Playback event types
 
@@ -16,7 +16,7 @@ Playback event types
 
 > **type**: `"play"` \| `"pause"` \| `"resume"` \| `"stop"` \| `"seek"` \| `"progress"` \| `"duration"`
 
-Defined in: audioManager.ts:33
+Defined in: audioManager.ts:34
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: audioManager.ts:33
 
 > **position**: `number`
 
-Defined in: audioManager.ts:34
+Defined in: audioManager.ts:35
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: audioManager.ts:34
 
 > `optional` **duration**: `number`
 
-Defined in: audioManager.ts:35
+Defined in: audioManager.ts:36
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: audioManager.ts:35
 
 > `optional` **audioData**: `Buffer`
 
-Defined in: audioManager.ts:36
+Defined in: audioManager.ts:37
