@@ -100,6 +100,20 @@ describe("extension", () => {
 			getCurrentDuration: jest.fn().mockReturnValue(10),
 			updatePosition: jest.fn(),
 			setWebviewProvider: jest.fn(),
+			getAvailableVoices: jest.fn().mockResolvedValue([
+				{
+					voiceId: "21m00Tcm4TlvDq8ikWAM",
+					name: "Rachel",
+					labels: { language: "English", accent: "American" },
+					description: "Default voice",
+				},
+				{
+					voiceId: "test-voice-id",
+					name: "Test Voice",
+					labels: { language: "English", accent: "British" },
+					description: "Test voice description",
+				},
+			]),
 			dispose: jest.fn(),
 		};
 		AudioManager.mockImplementation(() => mockAudioManager);
@@ -154,6 +168,7 @@ describe("extension", () => {
 			expect(commandNames).toContain("ttsCode.skipBackward");
 			expect(commandNames).toContain("ttsCode.exportAudio");
 			expect(commandNames).toContain("ttsCode.resetApiKey");
+			expect(commandNames).toContain("ttsCode.updateVoiceList");
 		});
 
 		it("should register webview provider", () => {
@@ -305,6 +320,14 @@ describe("extension", () => {
 			};
 			(vscode.window as any).activeTextEditor = mockEditor;
 
+			// Mock configuration with voice selection
+			const mockConfig = {
+				get: jest.fn().mockReturnValue("test-voice-id"),
+			};
+			(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(
+				mockConfig
+			);
+
 			await speakTextCommand.callback();
 
 			// Should ensure API key
@@ -313,11 +336,11 @@ describe("extension", () => {
 			// Should initialize audio manager
 			expect(mockAudioManager.initialize).toHaveBeenCalledWith("test-api-key");
 
-			// Should generate audio with chunking
+			// Should generate audio with chunking and selected voice
 			expect(mockAudioManager.generateAudioChunked).toHaveBeenCalledWith(
 				"Test markdown.",
 				expect.stringContaining("file://test.md_"),
-				undefined,
+				"test-voice-id",
 				expect.any(Function)
 			);
 
@@ -457,13 +480,21 @@ describe("extension", () => {
 			};
 			(vscode.window as any).activeTextEditor = mockEditor;
 
+			// Mock configuration with voice selection
+			const mockConfig = {
+				get: jest.fn().mockReturnValue("test-voice-id"),
+			};
+			(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(
+				mockConfig
+			);
+
 			await speakSelectionCommand.callback();
 
-			// Should generate audio for selection with chunking
+			// Should generate audio for selection with chunking and selected voice
 			expect(mockAudioManager.generateAudioChunked).toHaveBeenCalledWith(
 				"selected text",
 				expect.stringContaining("file://test.md_selection_"),
-				undefined,
+				"test-voice-id",
 				expect.any(Function)
 			);
 
@@ -653,6 +684,130 @@ describe("extension", () => {
 			expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
 				"ttsCode.exportAudio",
 				"mp3"
+			);
+		});
+	});
+
+	describe("updateVoiceList command", () => {
+		let updateVoiceListCommand: any;
+
+		beforeEach(() => {
+			extension.activate(mockContext);
+			updateVoiceListCommand = mockCommands.find(
+				(cmd) => cmd.command === "ttsCode.updateVoiceList"
+			);
+			// Ensure the command was found
+			expect(updateVoiceListCommand).toBeDefined();
+		});
+
+		it("should show error when no API key available", async () => {
+			mockApiKeyManager.ensureApiKey.mockResolvedValue(undefined);
+
+			await updateVoiceListCommand.callback();
+
+			// Should not call getAvailableVoices
+			expect(mockAudioManager.getAvailableVoices).not.toHaveBeenCalled();
+		});
+
+		it("should show warning when no voices available", async () => {
+			mockAudioManager.getAvailableVoices.mockResolvedValue([]);
+
+			await updateVoiceListCommand.callback();
+
+			expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
+				"No voices available"
+			);
+		});
+
+		it("should show voice selection and update settings", async () => {
+			// Mock showQuickPick to select the test voice
+			(vscode.window.showQuickPick as jest.Mock).mockResolvedValue({
+				label: "Test Voice",
+				description: "English, British",
+				detail: "Test voice description",
+				voiceId: "test-voice-id",
+			});
+
+			// Mock configuration
+			const mockConfig = {
+				get: jest.fn().mockReturnValue("21m00Tcm4TlvDq8ikWAM"),
+				update: jest.fn().mockResolvedValue(undefined),
+			};
+			(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(
+				mockConfig
+			);
+
+			await updateVoiceListCommand.callback();
+
+			// Should fetch voices
+			expect(mockAudioManager.getAvailableVoices).toHaveBeenCalled();
+
+			// Should show quick pick with correct items
+			expect(vscode.window.showQuickPick).toHaveBeenCalledWith(
+				expect.arrayContaining([
+					expect.objectContaining({
+						label: "Rachel",
+						description: "English, American",
+						voiceId: "21m00Tcm4TlvDq8ikWAM",
+					}),
+					expect.objectContaining({
+						label: "Test Voice",
+						description: "English, British",
+						voiceId: "test-voice-id",
+					}),
+				]),
+				{
+					placeHolder: "Select a voice to use",
+					title: "Choose Voice",
+				}
+			);
+
+			// Should update configuration
+			expect(mockConfig.update).toHaveBeenCalledWith(
+				"elevenlabs-tts.voiceId",
+				"test-voice-id",
+				vscode.ConfigurationTarget.Global
+			);
+
+			// Should show success message
+			expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
+				"Voice changed to: Test Voice"
+			);
+		});
+
+		it("should handle authentication errors", async () => {
+			const AuthError = require("../src/elevenLabsClient").AuthenticationError;
+			mockAudioManager.getAvailableVoices.mockRejectedValue(
+				new AuthError("Invalid API key")
+			);
+
+			await updateVoiceListCommand.callback();
+
+			expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+				"Invalid API key. Please reset your API key."
+			);
+		});
+
+		it("should handle voice selection cancellation", async () => {
+			// Mock showQuickPick to return undefined (user cancelled)
+			(vscode.window.showQuickPick as jest.Mock).mockResolvedValue(undefined);
+
+			const mockConfig = {
+				get: jest.fn().mockReturnValue("21m00Tcm4TlvDq8ikWAM"),
+				update: jest.fn(),
+			};
+			(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(
+				mockConfig
+			);
+
+			await updateVoiceListCommand.callback();
+
+			// Should not update configuration
+			expect(mockConfig.update).not.toHaveBeenCalled();
+
+			// Should not show success message
+			expect(vscode.window.showInformationMessage).not.toHaveBeenCalledWith(
+				expect.stringContaining("Voice changed to:")
 			);
 		});
 	});

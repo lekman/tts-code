@@ -16,6 +16,7 @@
  * https://github.com/lekman/tts-code
  */
 
+import { Voice } from "@elevenlabs/elevenlabs-js/api";
 import * as vscode from "vscode";
 
 import { ElevenLabsClient } from "./elevenLabsClient";
@@ -149,6 +150,20 @@ export class AudioManager {
 		this.currentAudioData = combinedBuffer;
 
 		return combinedBuffer;
+	}
+
+	/**
+	 * Gets available voices from the ElevenLabs API.
+	 * @returns {Promise<Voice[]>} Array of available voices.
+	 */
+	public async getAvailableVoices(): Promise<Voice[]> {
+		if (!this.elevenLabsClient) {
+			throw new Error(
+				"AudioManager not initialized. Please provide an API key."
+			);
+		}
+
+		return this.elevenLabsClient.getVoices();
 	}
 
 	/**

@@ -118,6 +118,10 @@
       {
         "command": "ttsCode.resetApiKey",
         "title": "TTS: Reset API Key"
+      },
+      {
+        "command": "ttsCode.updateVoiceList",
+        "title": "TTS: Update Voice List"
       }
     ],
     "menus": {
@@ -176,6 +180,17 @@
             "Show warnings and errors only",
             "Show errors only"
           ]
+        },
+        "elevenlabs-tts.voiceId": {
+          "type": "string",
+          "default": "21m00Tcm4TlvDq8ikWAM",
+          "description": "Select the voice to use for text-to-speech",
+          "enum": ["21m00Tcm4TlvDq8ikWAM"],
+          "enumDescriptions": ["Rachel (Default)"]
+        },
+        "elevenlabs-tts.exportPath": {
+          "type": "string",
+          "description": "Default path for audio export (optional). Leave empty to use extension storage."
         }
       }
     }
