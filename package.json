@@ -1,7 +1,7 @@
 {
   "name": "tts-code",
   "displayName": "ElevenLabs Text-to-Speech for VSCode",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "Add professional text-to-speech to VSCode with one click—featuring playback controls, text highlighting, and audio export.",
   "author": {
     "name": "Tobias Lekman",
@@ -185,8 +185,12 @@
           "type": "string",
           "default": "21m00Tcm4TlvDq8ikWAM",
           "description": "Select the voice to use for text-to-speech",
-          "enum": ["21m00Tcm4TlvDq8ikWAM"],
-          "enumDescriptions": ["Rachel (Default)"]
+          "enum": [
+            "21m00Tcm4TlvDq8ikWAM"
+          ],
+          "enumDescriptions": [
+            "Rachel (Default)"
+          ]
         },
         "elevenlabs-tts.exportPath": {
           "type": "string",
