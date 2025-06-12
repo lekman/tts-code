@@ -3,7 +3,7 @@ name: Auto Approve Release Please PR
 permissions:
   contents: read
   pull-requests: write
-  
+
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -18,7 +18,7 @@ jobs:
         uses: lekman/auto-approve-action@v1
         with:
           github-token: ${{ secrets.CODE_OWNER_TOKEN }}
-          allowed-authors: 'app/release-please-bot'
+          allowed-authors: 'app/lekman-release-please-bot'
           required-labels: 'autorelease: pending'
           label-match-mode: 'all'
           # Only allow changes to release files
