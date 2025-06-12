@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.4.0](https://github.com/lekman/tts-code/compare/tts-code@v1.3.2...tts-code@v1.4.0) (2025-06-12)
+
+
+### Features
+
+* add auto-approve workflow for release-related pull requests and update CODEOWNERS ([328c401](https://github.com/lekman/tts-code/commit/328c40140e592d27912f5dde04408193415824cf))
+* add file size limit check and progress reporting for audio generation ([0ca6674](https://github.com/lekman/tts-code/commit/0ca66742e8cbdb9d532543f3a79cf5b345d6662d))
+* add GitHub App token generation for release workflow ([75bdf37](https://github.com/lekman/tts-code/commit/75bdf37b85f97df8466532622137868ff26d164b))
+* add voice selection and update voice list functionality ([39c8417](https://github.com/lekman/tts-code/commit/39c8417adbb1b620fb61e7277e53a7f5cfc790e6))
+* implement audio export functionality with MP3 format support ([e0e3174](https://github.com/lekman/tts-code/commit/e0e3174a77db5aab2c2430fb80355ac55fe1e22b))
+
+
+### Bug Fixes
+
+* update auto-approve workflow permissions for pull requests ([47e8bce](https://github.com/lekman/tts-code/commit/47e8bce0f8fc3b325bbbc0e38baba9c0456c4fe2))
+
 ## [1.3.2](https://github.com/lekman/tts-code/compare/tts-code@v1.3.1...tts-code@v1.3.2) (2025-06-10)
 
 
