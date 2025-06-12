@@ -48,12 +48,20 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
       - name: "Release Please"
         uses: googleapis/release-please-action@v4
         if: github.ref == 'refs/heads/main'
         id: release
         with:
-          token: ${{ secrets.NPM_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           target-branch: ${{ github.ref_name}}
           config-file: .github/release-config.json
           manifest-file: .github/release-manifest.json
