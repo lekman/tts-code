@@ -1,0 +1,21 @@
+name: Auto Approve Release Please PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    # Only run for PRs from release-please branches
+    if: startsWith(github.head_ref, 'release-please--')
+    steps:
+      - name: Auto Approve Release PR
+        uses: lekman/auto-approve-action@v1
+        with:
+          github-token: ${{ secrets.CODE_OWNER_TOKEN }}
+          allowed-authors: 'app/release-please-bot'
+          required-labels: 'autorelease: pending'
+          label-match-mode: 'all'
+          # Only allow changes to release files
+          path-filters: '.github/release-manifest.json,**/CHANGELOG.md,CHANGELOG.md'
