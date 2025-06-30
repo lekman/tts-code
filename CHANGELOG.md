@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/lekman/tts-code/compare/tts-code@v1.4.0...tts-code@v1.4.1) (2025-06-30)
+
+
+### Bug Fixes
+
+* **depenabot:** bump actions/create-github-app-token ([85bc47c](https://github.com/lekman/tts-code/commit/85bc47cc00695e31e72ed5512ed85246a645670d))
+
 ## [1.4.0](https://github.com/lekman/tts-code/compare/tts-code@v1.3.2...tts-code@v1.4.0) (2025-06-12)
 
 
